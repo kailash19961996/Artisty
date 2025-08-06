@@ -1,0 +1,215 @@
+/* ArtCard Component Styles */
+
+.art-card {
+  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.8));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f3f4f6;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  transform: scale(1);
+}
+
+.art-card:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  transform: scale(1.05);
+}
+
+/* Image Container */
+.art-card-image-container {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4/3;
+}
+
+.art-card-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #e5e7eb;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.art-card-loading-icon {
+  width: 2rem;
+  height: 2rem;
+  color: #9ca3af;
+}
+
+.art-card-error {
+  width: 100%;
+  height: 16rem;
+  background: linear-gradient(to bottom right, #f9fafb, #e5e7eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.art-card-error-content {
+  text-align: center;
+}
+
+.art-card-error-icon {
+  width: 3rem;
+  height: 3rem;
+  color: #9ca3af;
+  margin: 0 auto 0.5rem;
+}
+
+.art-card-error-text {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.art-card-image {
+  width: 100%;
+  height: 16rem;
+  object-fit: cover;
+  transition: all 0.3s ease;
+}
+
+.art-card:hover .art-card-image {
+  transform: scale(1.1);
+}
+
+.art-card-image.loading {
+  opacity: 0;
+}
+
+.art-card-image.loaded {
+  opacity: 1;
+}
+
+/* Overlay */
+.art-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.art-card:hover .art-card-overlay {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.art-card-quick-view {
+  background-color: white;
+  color: #111827;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(0.5rem);
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.art-card:hover .art-card-quick-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Content */
+.art-card-content {
+  padding: 1.5rem;
+}
+
+.art-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+  min-height: 3.15rem; /* Match the title height */
+}
+
+.art-card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.4;
+  height: 3.15rem; /* Exactly 2 lines: font-size(1.125rem) * line-height(1.4) * 2 lines = 3.15rem */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+  overflow: hidden;
+  word-wrap: break-word;
+  transition: color 0.2s ease;
+  flex: 1;
+  margin-right: 0.5rem;
+}
+
+.art-card:hover .art-card-title {
+  color: #0284c7;
+}
+
+.art-card-origin {
+  font-size: 0.75rem;
+  background-color: #fde68a;
+  color: #d97706;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.art-card-description {
+  color: #4b5563;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  height: 2.625rem; /* Exactly 2 lines: font-size(0.875rem) * line-height(1.5) * 2 lines = 2.625rem */
+  margin-bottom: 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+  overflow: hidden;
+  word-wrap: break-word;
+}
+
+.art-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.art-card-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #82579b;
+}
+
+.art-card-button {
+  background-color: #82579b;
+  color: white;
+  font-size: 0.875rem;
+  padding: 0.5rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.art-card-button:hover {
+  background-color: #0369a1;
+  transform: scale(1.05);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
