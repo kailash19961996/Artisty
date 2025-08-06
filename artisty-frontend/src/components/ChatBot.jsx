@@ -103,21 +103,49 @@ const ChatBot = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputText;
     setInputText('');
     setIsTyping(true);
 
-    // Simulate bot response (in a real app, this would call your backend API)
-    setTimeout(() => {
-      const botResponse = generateBotResponse(inputText);
+    try {
+      // Call the backend API
+      const response = await fetch('http://localhost:5000/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: currentInput
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
       const botMessage = {
         id: Date.now() + 1,
-        text: botResponse,
+        text: data.response || 'Sorry, I encountered an error. Please try again.',
+        isBot: true,
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, botMessage]);
+    } catch (error) {
+      console.error('Error calling backend API:', error);
+      // Fallback to local response if API fails
+      const fallbackResponse = generateBotResponse(currentInput);
+      const botMessage = {
+        id: Date.now() + 1,
+        text: `I'm having trouble connecting to my AI service right now. Here's what I can tell you locally: ${fallbackResponse}`,
         isBot: true,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, botMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1000 + Math.random() * 1500);
+    }
   };
 
   const generateBotResponse = (userInput) => {

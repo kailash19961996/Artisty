@@ -13,12 +13,6 @@ const Header = () => {
             <span className="header-logo-text">Artisty</span>
           </div>
 
-          {/* Center Navigation */}
-          <nav className="header-nav-links">
-            <a href="#about" className="header-nav-link">About</a>
-            <a href="#menu" className="header-nav-link">Menu</a>
-          </nav>
-
           {/* Right Side Actions */}
           <div className="header-actions">
             {/* Globe Icon */}
