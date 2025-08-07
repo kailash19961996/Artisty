@@ -40,10 +40,10 @@
 /* Chat Window */
 .chatbot-window {
   position: fixed;
-  width: 25rem;
+  width: 20rem;
   height: 32rem; /* Increased height */
-  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.8));
-  backdrop-filter: blur(2px);
+  background: linear-gradient(135deg, rgba(243, 224, 249, 0.9), rgba(255,255,255,0.8));
+  backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(10px);
   border-radius: 0.75rem;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
