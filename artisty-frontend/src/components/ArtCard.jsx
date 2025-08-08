@@ -42,7 +42,7 @@ const ArtCard = ({ art }) => {
           </div>
         ) : (
           <img
-            src={`/src/assets/images/${art.image}`}
+            src={new URL(`../assets/images/${art.image}`, import.meta.url).href}
             alt={art.name}
             className={`art-card-image ${isLoading ? 'loading' : 'loaded'}`}
             onLoad={handleImageLoad}

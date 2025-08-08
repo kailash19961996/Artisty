@@ -50,7 +50,8 @@ const ChatBot = ({ isOpen, onToggle }) => {
 
     try {
       // Call the backend API
-      const response = await fetch('http://localhost:5000/api/chat', {
+      const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+      const response = await fetch(`${API_BASE}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
