@@ -1,14 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const ChatBot = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+const ChatBot = ({ isOpen, onToggle }) => {
   const [messages, setMessages] = useState([
     {
       id: 1,
-      text: "Hello! I'm your art assistant. I can help you find the perfect artwork, answer questions about our collection, or assist with your purchase. How can I help you today?",
+      text: "Hello! I'm Purple. I can help you find the perfect artwork, answer questions about our collection, or assist with your purchase. How can I help you today?",
       isBot: true,
       timestamp: new Date(),
     }
@@ -16,7 +12,8 @@ const ChatBot = () => {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
-  const chatBotRef = useRef(null);
+  const [mobileSize, setMobileSize] = useState('peek'); // 'peek' | 'mid' | 'full'
+  const [isMobile, setIsMobile] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -26,70 +23,14 @@ const ChatBot = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Handle dragging
-  const handleMouseDown = (e) => {
-    if (!isOpen) { // Only allow dragging when closed
-      setIsDragging(true);
-      const rect = chatBotRef.current.getBoundingClientRect();
-      setDragOffset({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-      });
-    }
-  };
-
-  const handleMouseMove = (e) => {
-    if (isDragging && !isOpen) {
-      const newX = e.clientX - dragOffset.x;
-      const newY = e.clientY - dragOffset.y;
-      
-      // Keep within screen bounds
-      const maxX = window.innerWidth - 64; // 64px is button width
-      const maxY = window.innerHeight - 64; // 64px is button height
-      
-      setPosition({
-        x: Math.max(0, Math.min(newX, maxX)),
-        y: Math.max(0, Math.min(newY, maxY)),
-      });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
   useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging, dragOffset]);
-
-  // Initialize position and handle window resize
-  useEffect(() => {
-    const initializePosition = () => {
-      setPosition({
-        x: window.innerWidth - 100,
-        y: window.innerHeight - 100
-      });
+    const mq = window.matchMedia('(max-width: 767px)');
+    const sync = () => setIsMobile(mq.matches);
+    sync();
+    mq.addEventListener ? mq.addEventListener('change', sync) : mq.addListener(sync);
+    return () => {
+      mq.removeEventListener ? mq.removeEventListener('change', sync) : mq.removeListener(sync);
     };
-
-    const handleResize = () => {
-      setPosition(prev => ({
-        x: Math.min(prev.x, window.innerWidth - 64),
-        y: Math.min(prev.y, window.innerHeight - 64)
-      }));
-    };
-
-    // Initialize position on first load
-    initializePosition();
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const handleSend = async () => {
@@ -124,6 +65,8 @@ const ChatBot = () => {
       }
 
       const data = await response.json();
+      
+      // Handle AI Agent response
       const botMessage = {
         id: Date.now() + 1,
         text: data.response || 'Sorry, I encountered an error. Please try again.',
@@ -132,6 +75,20 @@ const ChatBot = () => {
       };
       
       setMessages(prev => [...prev, botMessage]);
+      
+      // Handle web actions from the agent
+      if (data.web_actions && data.web_actions.length > 0) {
+        data.web_actions.forEach(action => {
+          if (action.type === 'search') {
+            // Trigger search in the main app
+            triggerSearch(action.value);
+          } else if (action.type === 'scroll') {
+            // Trigger scroll action
+            triggerScrollToSection(action.value);
+          }
+        });
+      }
+      
     } catch (error) {
       console.error('Error calling backend API:', error);
       // Fallback to local response if API fails
@@ -145,6 +102,45 @@ const ChatBot = () => {
       setMessages(prev => [...prev, botMessage]);
     } finally {
       setIsTyping(false);
+    }
+  };
+
+  // Function to trigger search in main app
+  const triggerSearch = (searchTerm) => {
+    // Dispatch custom event to trigger search
+    window.dispatchEvent(new CustomEvent('agentSearch', { 
+      detail: { searchTerm } 
+    }));
+  };
+
+  // Function to trigger scroll to specific section
+  const triggerScrollToSection = (sectionId) => {
+    if (sectionId === 'art-collection') {
+      // Add a small delay to ensure search results are processed first
+      setTimeout(() => {
+        // Try to find the gallery section by ID first, then by class
+        const gallerySection = document.getElementById('art-collection') ||
+                             document.querySelector('.gallery-section') ||
+                             document.querySelector('.gallery-container') ||
+                             document.querySelector('.gallery-header');
+        
+        if (gallerySection) {
+          gallerySection.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start',
+            inline: 'nearest'
+          });
+          console.log('🎯 Scrolled to art collection section');
+        } else {
+          // Fallback: scroll down to show art content
+          window.scrollBy({ top: 600, behavior: 'smooth' });
+          console.log('📜 Fallback scroll to show art content');
+        }
+      }, 800); // Slight delay to let search results load and chatbot response appear
+    } else {
+      // Generic scroll handling
+      const scrollAmount = sectionId === 'down' ? 500 : -500;
+      window.scrollBy({ top: scrollAmount, behavior: 'smooth' });
     }
   };
 
@@ -175,44 +171,53 @@ const ChatBot = () => {
     }
   };
 
+  const cycleSize = () => {
+    setMobileSize((s) => (s === 'peek' ? 'mid' : s === 'mid' ? 'full' : 'peek'));
+  };
+
+  const onInputFocus = () => {
+    if (isMobile && mobileSize === 'peek') setMobileSize('mid');
+  };
+  const onInputBlur = () => {
+    // keep current; optionally shrink back
+  };
+
   return (
     <>
-      {/* Chat Button */}
-      <button
-        ref={chatBotRef}
-        onClick={() => setIsOpen(!isOpen)}
-        onMouseDown={handleMouseDown}
-        className={`chatbot-button ${isOpen ? 'open' : ''} ${!isOpen ? 'animate-shake' : ''}`}
-        style={{
-          left: `${position.x}px`,
-          top: `${position.y}px`,
-          cursor: isDragging ? 'grabbing' : (!isOpen ? 'grab' : 'pointer')
-        }}
-      >
-        {isOpen ? (
-          <svg className="chatbot-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        ) : (
-          <svg className="chatbot-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-        )}
-      </button>
-
-      {/* Chat Window */}
-      {isOpen && (
-        <div 
-          className="chatbot-window"
-          style={{
-            left: `${Math.min(position.x, Math.max(20, window.innerWidth - 420))}px`, // 420px is window width + margin
-            top: `${Math.max(Math.min(position.y - 520, window.innerHeight - 540), 20)}px`, // 520px is window height + margin
-          }}
+      {/* Chat Button - Fixed position, only show when closed */}
+      {!isOpen && (
+        <button
+          onClick={onToggle}
+          className="chatbot-button-fixed animate-attention"
         >
+        <svg className="chatbot-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+        </button>
+      )}
+
+      {/* Chat Window - Split screen on desktop, bottom overlay on mobile */}
+      {isOpen && (
+        <div className="chatbot-panel" data-size={isMobile ? mobileSize : undefined}>
           {/* Header */}
           <div className="chatbot-header">
-            <h3>🎨 Art Assistant</h3>
-            <p>Online now</p>
+            <div className="chatbot-header-content">
+              <div className="chatbot-header-logo">
+                <div className="chatbot-header-logo-icon">
+                  <span>🎨</span>
+                </div>
+                <div>
+                  <h3>Purple</h3>
+                  <p>Online now</p>
+                </div>
+              </div>
+              {/* size toggle removed on mobile per design */}
+              <button onClick={onToggle} className="chatbot-close">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
@@ -251,6 +256,8 @@ const ChatBot = () => {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={handleKeyPress}
+                onFocus={onInputFocus}
+                onBlur={onInputBlur}
                 placeholder="Ask about our artworks..."
                 className="chatbot-input"
               />
