@@ -1,187 +1,137 @@
 # Artisty – AI Gallery Assistant
 
-A modern web experience that helps people discover artwork using a conversational AI assistant. It blends a beautiful React/Vite frontend with a lightweight Python/Flask backend powered by OpenAI’s Responses API. The system understands natural language (country, style, theme, color, price, names) and shows relevant pieces from a curated inventory.
+Artisty is an interactive, **AI agent**-powered art gallery experience. This isn’t just a chatbot that answers questions — it’s a smart, action-oriented assistant that understands what you want and takes steps to deliver it. Think of it like a friendly in-store salesperson who not only recommends the perfect pieces but also physically walks you to them — only here, it’s online, and the AI agent navigates the gallery for you.
 
 ---
 
 ## Overview
 
-- The site showcases a curated gallery of 60+ artworks with names, prices, countries, and short descriptions.
-- A friendly assistant named “Purple” chats with you about what you like and suggests art to match.
-- It uses a “two‑pass” approach:
-  1) The AI replies in a short, funny tone and lists 2–5 relevant artworks from the gallery.
-  2) It then extracts the mentioned artwork names and triggers a search(AI agent) and scrolls the scree to right location(AI agent), so you see them on screen.
-- If the AI misses a name, the backend has a deterministic fallback that scans the reply and finds inventory names directly.
+Artisty blends a modern **React/Vite frontend** with a **Python/Flask backend** powered by OpenAI’s Responses API. The AI agent understands natural language queries about style, theme, origin, price, or even abstract concepts, and then:
 
-What you can do now:
-- Ask for art by country/region (e.g., “from Africa”, “from UK”), style, theme, color, price range, or specific title.
-- Get a compact set of suggestions with short descriptions and see the results populate in the gallery.
+1. **Finds the right artworks** from your curated inventory.
+2. **Takes action** by focusing the on-screen gallery on those pieces.
+
+The result is a dynamic, fun, and friendly browsing experience — more like interacting with a knowledgeable guide than just typing into a search box.
 
 ---
 
-## Key Features
+## Current Features
 
-- Conversational discovery with a two‑pass LLM flow (Responses API)
-  - Pass 1: Understands your request and proposes 2–5 pieces from the actual inventory (`backend/art.txt`).
-  - Pass 2: Extracts the artwork names from the reply and triggers a gallery search.
-  - Deterministic fallback: If the LLM doesn’t extract names, the backend matches known names in the reply text.
-- Strict, inventory‑grounded suggestions
-  - Country/region mappings (e.g., “South America → Brazil, Argentina”) ensure relevant origin filters.
-  - Uses only real names from the gallery; avoids hallucinated titles.
-- Clean, simple backend
-  - Uses OpenAI Responses API (no chat/completions legacy params).
-- Smooth frontend
-  - React (Vite) UI with a modern layout and a docked chat widget.
+* **AI Agent-driven discovery**
+  Ask for art by country, region, style, theme, color, price, or a specific title (e.g., “naturalistic blend of animal and bird”), and the AI agent will both answer and act.
 
----
+* **Two-pass LLM flow with fallback**
 
-## Architecture (for builders)
+  1. **Pass 1**: AI agent generates a short, friendly reply suggesting 2–5 works from the actual inventory.
+  2. **Pass 2**: Extracts the titles for gallery navigation.
+  3. **Fallback**: If extraction misses titles, the backend deterministically matches them from the reply.
 
-- Frontend: `artisty-frontend/`
-  - React + Vite
-  - Chat UI component (`src/components/ChatBot.jsx`)
-  - Calls `/api/chat` (proxied to the backend) and dispatches search events
-- Backend: `backend/`
-  - Flask (`app.py`) with two endpoints:
-    - `GET /api/health` – simple health check
-    - `POST /api/chat` – two‑pass flow
-  - Inventory in `backend/art.txt`
-  - Prompts in `backend/prompts.py` (short, focused)
-- Two‑pass flow
-  - Pass 1 input = inventory + “first‑pass” prompt + user message
-  - Pass 1 output = friendly text with 2–5 recommendations (names + brief phrases)
-  - Pass 2 = extract names; deterministic fallback scans reply for any inventory titles
-  - Frontend then searches and scrolls to the gallery
+* **Action-oriented navigation**
+  The AI agent not only recommends but also scrolls or focuses the gallery so the suggested pieces are front and center.
+
+* **Inventory-grounded results**
+  The AI agent only uses artworks from `backend/art.txt`, with geographic mappings for broader queries.
+
+* **Clean and modular architecture**
+
+  * React/Vite UI with a docked chat widget.
+  * Flask backend with minimal endpoints for health and chat.
 
 ---
 
-## Setup (local development)
+## Architecture
 
-Prereqs
-- Python 3.9+
-- Node.js 18+ (recommend 20 via nvm) and npm
+**Frontend (`artisty-frontend/`)**
 
-Backend
-1) Create a venv and install deps:
-   ```bash
-   cd backend
-   python3 -m venv .venv
-   source .venv/bin/activate
-   python -m pip install --upgrade pip
-   pip install -r requirements.txt
-   ```
-2) Create `.env`:
-   ```env
-   OPENAI_API_KEY=sk-...
-   OPENAI_MODEL=gpt-4o-mini-2024-07-18   # or your chosen model
-   # Optional: a different model for pass 2 extraction
-   OPENAI_MODEL1=
-   PORT=5050
-   ```
-3) Run the backend:
-   ```bash
-   python app.py
-   ```
-   - Health: `http://localhost:5050/api/health`
-   - Chat: `http://localhost:5050/api/chat`
+* React + Vite
+* Chat UI component (`ChatBot.jsx`) to send queries and trigger gallery actions
+* State management for search/focus
 
-Frontend
-1) Install and run:
-   ```bash
-   cd artisty-frontend
-   npm install
-   npm run dev
-   ```
-2) Open `http://localhost:5173`
-   - Vite proxy sends `/api/*` to `http://localhost:5050`.
+**Backend (`backend/`)**
 
-Troubleshooting
-- Port 5000 may be used by macOS AirPlay; this project uses port 5050 to avoid conflicts.
-- If npm is “not found,” load nvm (or install Node with Homebrew or nodejs.org).
-- If the AI returns parameter errors, ensure the backend uses `Responses API` and your model supports the used options.
-- If chat suggestions appear but the gallery doesn’t update, check DevTools → Network for `/api/chat` and confirm `200`.
+* Flask app (`app.py`)
+* Inventory in `art.txt`
+* Prompts in `prompts.py` for AI agent’s Pass 1 & 2 logic
+* Deterministic title-matching fallback
+
+**Data Flow**
+
+1. User sends query → AI agent runs Pass 1 → returns friendly suggestions
+2. Backend extracts titles → frontend triggers gallery focus
+3. If LLM fails extraction, fallback ensures titles are still matched
 
 ---
 
-## Configuration
+## Setup
 
-Environment variables (backend/.env):
-- `OPENAI_API_KEY` – your OpenAI key
-- `OPENAI_MODEL` – model name for pass 1 (e.g., `gpt-4o-mini-2024-07-18`)
-- `OPENAI_MODEL1` – optional model for pass 2 extraction (falls back to `OPENAI_MODEL` if unset)
-- `PORT` – backend port (default 5050)
+**Backend**
 
-Frontend (optional):
-- `artisty-frontend/.env.local` with `VITE_API_BASE_URL=http://localhost:5050` (Vite proxy already covers `/api/*`).
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
----
+**Environment Variables (`.env`)**
 
-## Current AI “Agentic” Capacity
+```env
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini-2024-07-18
+PORT=5050
+```
 
-- Goal‑driven response shaping: The “first pass” prompt instructs the model to understand the core user intent (country/region/continent, style, theme, color, price, or specific name) and produce only inventory‑backed suggestions.
-- Tool‑like behavior without external tools: The “second pass” behaves like a simple extraction tool. If it fails, the backend’s deterministic extractor substitutes, keeping the system reliable.
-- Grounded answers: All suggestions are drawn from `art.txt`. The system discourages hallucinated titles.
+**Run Backend**
 
-Limitations to be aware of
-- LLMs can still misinterpret nuanced geography or styles; we mitigate via explicit mapping rules and inventory‑only constraints.
-- Extraction can fail under ambiguous phrasing; the deterministic fallback minimizes UX impact.
+```bash
+python app.py
+```
 
----
+**Frontend**
 
-## Future Scope: Deeper AI Agents & Traceable Commerce
+```bash
+cd artisty-frontend
+npm install
+npm run dev
+```
 
-- Multi‑agent orchestration
-  - Planner/Router agent to decide which capabilities to use (search, filter, compare, summarize, price justify, upsell, etc.)
-  - Critic/Refiner agent to check geographic/style consistency and correct mismatches before sending suggestions
-- Personalization & memory
-  - Lightweight preference memory (liked countries, colors, budgets) with transparent controls and opt‑out
-  - Session scoring and progressive recommendations
-- Retrieval‑augmented generation (RAG)
-  - Vector search over extended catalogs and artist bios
-  - Private, curated sources for higher precision
-- Observability & safety
-  - Traces for every decision (input, prompt, model, output, user actions)
-  - Guardrails for tone, safe content, and bias checks
-- Smart‑contract integration for trust and provenance
-  - On‑chain registries for artwork provenance and ownership history
-  - Tokenized certificates of authenticity (NFT or soul‑bound credentials)
-  - Escrow or milestone smart contracts for purchases and commissions
-  - Wallet‑based checkout (Sign‑in with Ethereum, Solana, or other chains)
-- Traceability features
-  - Content‑addressed storage (e.g., IPFS) for images + metadata
-  - Cryptographic hashes written on‑chain for immutable provenance
-  - Attestations (EAS/Verifiable Credentials) to link artist → gallery → buyer
-  - Public verification page that proves authenticity and chain of custody
+Visit: [http://localhost:5173](http://localhost:5173)
 
 ---
 
-## How It Works (deeper dive)
+## Future Scope
 
-1) User sends a message via chat
-2) Backend builds input for Pass 1: inventory + focused “first‑pass” prompt + user message
-3) Pass 1 model returns a friendly reply with 2–5 real titles
-4) Backend extracts titles for Pass 2
-   - Deterministic: scan reply for exact inventory names (first choice)
-   - LLM fallback: prompt the model to output only names as a single space‑separated string
-5) Frontend receives the reply + search actions and updates the gallery
+* **Blockchain integration** for provenance and authenticity:
 
----
+  * Smart contracts for transparent transactions without middlemen.
+  * On-chain ownership history and anti-duplication safeguards.
+  * Tokenized authenticity certificates (NFT or verifiable credentials).
+  * Automated percentage splits to designated wallets.
 
-## Contributing
+* **Multi-agent orchestration**
 
-- Keep prompts short and directive; prefer constraints over examples.
-- Favor deterministic fallbacks when extraction is failure‑prone.
-- Match existing code style and keep edits minimal and focused.
+  * Planner agent to decide on filters, comparisons, and upselling.
+  * Critic agent to validate suggestions against style/geography rules.
+
+* **Personalization**
+
+  * Session-based memory for preferences (colors, price range, origins).
+  * Progressive recommendations over time.
+
+* **Traceability**
+
+  * IPFS or similar content-addressed storage for artwork metadata.
+  * Public verification pages for provenance.
 
 ---
 
 ## License
 
-MIT 
+MIT
 
 ---
 
 ## Acknowledgements
 
-- Built with React, Vite, Flask, and OpenAI’s Responses API.
-- Inventory is synthetic for demo purposes; replace `backend/art.txt` with your catalog.
+* Built with React, Vite, Flask, and OpenAI’s Responses API.
+* Inventory
