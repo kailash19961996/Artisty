@@ -2,6 +2,9 @@
 
 Artisty is an interactive, **AI agent**-powered art gallery experience. This isn’t just a chatbot that answers questions — it’s a smart, action-oriented assistant that understands what you want and takes steps to deliver it. Think of it like a friendly in-store salesperson who not only recommends the perfect pieces but also physically walks you to them — only here, it’s online, and the AI agent navigates the gallery for you.
 
+<img width="1909" height="936" alt="Screenshot 2025-08-09 at 23 45 34" src="https://github.com/user-attachments/assets/0dfdaac2-2bff-45ca-9286-54032472b1ec" />
+<img width="1909" height="909" alt="Screenshot 2025-08-09 at 23 46 37" src="https://github.com/user-attachments/assets/a0db07cf-a17b-4403-9ba5-2385f73bb64f" />
+
 ---
 
 ## Overview
