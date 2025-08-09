@@ -6,6 +6,8 @@ Artisty is an interactive, **AI agent**-powered art gallery experience. This isn
 
 <img width="1909" height="909" alt="Screenshot 2025-08-09 at 23 46 37" src="https://github.com/user-attachments/assets/a0db07cf-a17b-4403-9ba5-2385f73bb64f" />
 
+<img width="1293" height="964" alt="image" src="https://github.com/user-attachments/assets/8cc4ad75-ae1c-44c3-b1e2-4ab472bba020" />
+
 ---
 
 ## Overview
