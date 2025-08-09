@@ -13,7 +13,7 @@ const Footer = () => {
             <span className="footer-logo-text">Artisty</span>
           </div>
           <p className="footer-description">
-            Discover extraordinary art pieces from talented artists around the world. Our curated collection brings beauty and inspiration to your space.
+            Built by Kai, find more @ www.kailash.london
           </p>
         </div>
 
