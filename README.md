@@ -2,19 +2,16 @@
 
 A modern web experience that helps people discover artwork using a conversational AI assistant. It blends a beautiful React/Vite frontend with a lightweight Python/Flask backend powered by OpenAI’s Responses API. The system understands natural language (country, style, theme, color, price, names) and shows relevant pieces from a curated inventory.
 
-This README is written for both non‑technical and technical readers. Skim the Overview and Features if you want the big picture; jump to Architecture and Development if you’re building.
-
 ---
 
-## Overview (for everyone)
+## Overview
 
 - The site showcases a curated gallery of 60+ artworks with names, prices, countries, and short descriptions.
 - A friendly assistant named “Purple” chats with you about what you like and suggests art to match.
 - It uses a “two‑pass” approach:
   1) The AI replies in a short, funny tone and lists 2–5 relevant artworks from the gallery.
-  2) It then extracts the mentioned artwork names and triggers a search so you see them on screen.
+  2) It then extracts the mentioned artwork names and triggers a search(AI agent) and scrolls the scree to right location(AI agent), so you see them on screen.
 - If the AI misses a name, the backend has a deterministic fallback that scans the reply and finds inventory names directly.
-- Everything runs locally: React/Vite frontend, Flask backend.
 
 What you can do now:
 - Ask for art by country/region (e.g., “from Africa”, “from UK”), style, theme, color, price range, or specific title.
@@ -32,11 +29,9 @@ What you can do now:
   - Country/region mappings (e.g., “South America → Brazil, Argentina”) ensure relevant origin filters.
   - Uses only real names from the gallery; avoids hallucinated titles.
 - Clean, simple backend
-  - Flask + CORS, `.env` driven config, print‑only logs.
   - Uses OpenAI Responses API (no chat/completions legacy params).
 - Smooth frontend
   - React (Vite) UI with a modern layout and a docked chat widget.
-  - Vite proxy routes `/api/*` to the local backend for easy local dev.
 
 ---
 
@@ -182,7 +177,7 @@ Limitations to be aware of
 
 ## License
 
-MIT (replace if your organization needs a different license).
+MIT 
 
 ---
 
