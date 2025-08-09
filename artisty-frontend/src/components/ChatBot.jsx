@@ -11,6 +11,7 @@ const ChatBot = ({ isOpen, onToggle }) => {
   ]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [backendOnline, setBackendOnline] = useState(null); // null | true | false
   const messagesEndRef = useRef(null);
   const [mobileSize, setMobileSize] = useState('peek'); // 'peek' | 'mid' | 'full'
   const [isMobile, setIsMobile] = useState(false);
@@ -33,6 +34,23 @@ const ChatBot = ({ isOpen, onToggle }) => {
     };
   }, []);
 
+  // Check backend health on mount
+  useEffect(() => {
+    let isMounted = true;
+    fetch('/api/health')
+      .then(async (res) => {
+        if (!isMounted) return;
+        setBackendOnline(res.ok);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setBackendOnline(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleSend = async () => {
     if (!inputText.trim()) return;
 
@@ -49,9 +67,8 @@ const ChatBot = ({ isOpen, onToggle }) => {
     setIsTyping(true);
 
     try {
-      // Call the backend API
-      const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-      const response = await fetch(`${API_BASE}/api/chat`, {
+      // Call the backend API via Vite proxy
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -61,11 +78,27 @@ const ChatBot = ({ isOpen, onToggle }) => {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      let data = null;
+      let text = '';
+      try {
+        data = await response.clone().json();
+      } catch (e) {
+        try {
+          text = await response.text();
+        } catch (_) {
+          text = '';
+        }
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        const errorMessage = (data && (data.error || data.message)) || text || `HTTP ${response.status}`;
+        console.error('Backend returned error:', response.status, errorMessage);
+        setBackendOnline(false);
+        throw new Error(errorMessage);
+      }
+
+      setBackendOnline(true);
+      data = data || {};
       
       // Handle AI Agent response
       const botMessage = {
@@ -96,7 +129,7 @@ const ChatBot = ({ isOpen, onToggle }) => {
       const fallbackResponse = generateBotResponse(currentInput);
       const botMessage = {
         id: Date.now() + 1,
-        text: `I'm having trouble connecting to my AI service right now. Here's what I can tell you locally: ${fallbackResponse}`,
+        text: `I'm having trouble connecting to my AI service right now${error?.message ? ` (reason: ${error.message})` : ''}. Here's what I can tell you locally: ${fallbackResponse}`,
         isBot: true,
         timestamp: new Date(),
       };
