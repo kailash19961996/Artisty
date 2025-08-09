@@ -42,6 +42,10 @@ The result is a dynamic, fun, and friendly browsing experience — more like int
   * Flask backend with minimal endpoints for health and chat.
 
 ---
+## Live Demo
+- **Frontend:** [https://main.d1lzbp0aw93yrh.amplifyapp.com/](https://main.d1lzbp0aw93yrh.amplifyapp.com/)
+- **Portfolio:** [https://kailash.london/](https://kailash.london/)  
+- **Hackathon Submission Presentation:** [PPTX Link](https://docs.google.com/presentation/d/1jJuar2xDy54ieuVl4fe6pKGMCWLgdfOtoMt2JLQufm4/edit?usp=sharing)  
 
 ## Architecture
 
