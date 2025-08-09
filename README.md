@@ -2,6 +2,15 @@
 
 Artisty is an interactive, **AI agent**-powered art gallery experience. This isn’t just a chatbot that answers questions — it’s a smart, action-oriented assistant that understands what you want and takes steps to deliver it. Think of it like a friendly in-store salesperson who not only recommends the perfect pieces but also physically walks you to them — only here, it’s online, and the AI agent navigates the gallery for you.
 
+---
+## Live Demo
+- **Frontend:** [https://main.d1lzbp0aw93yrh.amplifyapp.com/](https://main.d1lzbp0aw93yrh.amplifyapp.com/)
+- **Portfolio:** [https://kailash.london/](https://kailash.london/)  
+- **Hackathon Submission Presentation:** [PPTX Link](https://docs.google.com/presentation/d/1jJuar2xDy54ieuVl4fe6pKGMCWLgdfOtoMt2JLQufm4/edit?usp=sharing)
+> ⚠️ **Note:** The backend is not deployed online due to time constraints.  
+> You can run it locally by cloning this repository and following the instructions below.
+
+
 <img width="1438" height="763" alt="Screenshot 2025-08-10 at 00 04 41" src="https://github.com/user-attachments/assets/f48d508a-c7fd-4503-b949-039b6b798816" />
 
 <img width="1909" height="909" alt="Screenshot 2025-08-09 at 23 46 37" src="https://github.com/user-attachments/assets/a0db07cf-a17b-4403-9ba5-2385f73bb64f" />
@@ -44,13 +53,6 @@ The result is a dynamic, fun, and friendly browsing experience — more like int
   * Flask backend with minimal endpoints for health and chat.
 
 ---
-## Live Demo
-- **Frontend:** [https://main.d1lzbp0aw93yrh.amplifyapp.com/](https://main.d1lzbp0aw93yrh.amplifyapp.com/)
-- **Portfolio:** [https://kailash.london/](https://kailash.london/)  
-- **Hackathon Submission Presentation:** [PPTX Link](https://docs.google.com/presentation/d/1jJuar2xDy54ieuVl4fe6pKGMCWLgdfOtoMt2JLQufm4/edit?usp=sharing)
-> ⚠️ **Note:** The backend is not deployed online due to time constraints.  
-> You can run it locally by cloning this repository and following the instructions below.
-
 
 ## Architecture
 
