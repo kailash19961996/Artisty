@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { apiFetch } from './api';
+
 
 const ChatBot = ({ isOpen, onToggle }) => {
   const [messages, setMessages] = useState([
@@ -37,7 +39,7 @@ const ChatBot = ({ isOpen, onToggle }) => {
   // Check backend health on mount
   useEffect(() => {
     let isMounted = true;
-    fetch('/api/health')
+    apiFetch('/api/health')
       .then(async (res) => {
         if (!isMounted) return;
         setBackendOnline(res.ok);
@@ -68,15 +70,10 @@ const ChatBot = ({ isOpen, onToggle }) => {
 
     try {
       // Call the backend API via Vite proxy
-      const response = await fetch('/api/chat', {
+      const response = await apiFetch('/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: currentInput
-        }),
-      });
+        headers: {'Content-Type': 'application/json',},
+        body: JSON.stringify({message: currentInput}),});
 
       let data = null;
       let text = '';
