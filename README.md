@@ -1,152 +1,128 @@
-# Artisty – AI Gallery Assistant
+# Artisty
 
-Artisty is an interactive, **AI agent**-powered art gallery experience. This isn’t just a chatbot that answers questions — it’s a smart, action-oriented assistant that understands what you want and takes steps to deliver it. Think of it like a friendly in-store salesperson who not only recommends the perfect pieces but also physically walks you to them — only here, it’s online, and the AI agent navigates the gallery for you.
+**Agentic AI-powered art gallery with intelligent search and conversational assistance**
 
----
-## Live Demo
-- **Frontend:** [https://main.d1lzbp0aw93yrh.amplifyapp.com/](https://main.d1lzbp0aw93yrh.amplifyapp.com/)
-- **Portfolio:** [https://kailash.london/](https://kailash.london/)  
-- **Hackathon Submission Presentation:** [PPTX Link](https://docs.google.com/presentation/d/1jJuar2xDy54ieuVl4fe6pKGMCWLgdfOtoMt2JLQufm4/edit?usp=sharing)
-> ⚠️ **Note:** The backend is not deployed online due to time constraints.  
-> You can run it locally by cloning this repository and following the instructions below.
+Artisty transforms the way people discover and purchase art by combining intelligent conversational AI agent with a curated gallery experience. Instead of traditional keyword search, users can naturally describe what they're looking for and receive personalized recommendations with real-time gallery navigation.
 
+## Problem Statement
 
-<img width="1438" height="763" alt="Screenshot 2025-08-10 at 00 04 41" src="https://github.com/user-attachments/assets/f48d508a-c7fd-4503-b949-039b6b798816" />
+Traditional art galleries and e-commerce platforms rely on basic filters and keyword search, making art discovery frustrating and limiting. Users struggle to find pieces that match their aesthetic preferences, budget, or specific requirements using conventional search methods.
 
-<img width="1910" height="946" alt="Screenshot 2025-08-10 at 00 23 51" src="https://github.com/user-attachments/assets/83169659-b291-4e9d-b1b5-3537e24f5762" />
+## Architecture Overview
 
-<img width="1293" height="964" alt="image" src="https://github.com/user-attachments/assets/8cc4ad75-ae1c-44c3-b1e2-4ab472bba020" />
+The system uses a multi-agent approach with LangChain orchestration:
 
----
+1. **Intent Router**: Classifies user messages as information requests or art suggestions
+2. **Inventory Search Agent**: Intelligently searches the art collection using LLM understanding
+3. **Response Generator**: Creates conversational responses with appropriate suggestions
+4. **Extraction Agent**: Identifies mentioned artwork names for gallery navigation
+5. **Memory Manager**: Maintains conversation context for better user experience
 
-## Overview
+All decision-making is handled by AI agents rather than manual rules, ensuring intelligent and flexible responses to user queries.
 
-Artisty blends a modern **React/Vite frontend** with a **Python/Flask backend** powered by OpenAI’s Responses API. The AI agent understands natural language queries about style, theme, origin, price, or even abstract concepts, and then:
+## What It Can Do
 
-1. **Finds the right artworks** from your curated inventory.
-2. **Takes action** by focusing the on-screen gallery on those pieces.
+- **Natural Language Search**: Ask for art using everyday language like "show me vibrant pieces from Asia under $2000"
+- **Intelligent Recommendations**: AI analyzes your preferences and suggests 1-10+ relevant artworks
+- **Regional Understanding**: Knows geographic mappings (Asia = Japan, China, Korea, Thailand, India, Vietnam, etc.)
+- **Conversational Memory**: Remembers context within conversations for better assistance
+- **Real-time Gallery Navigation**: Automatically scrolls and displays suggested artworks
+- **Inventory-Aware Responses**: Only suggests available pieces from the actual collection
+- **Multi-criteria Filtering**: Simultaneously search by country, color, style, theme, and price
 
-The result is a dynamic, fun, and friendly browsing experience — more like interacting with a knowledgeable guide than just typing into a search box.
+## What It Cannot Do
 
----
+- Generate or create new artworks
+- Process payments or handle transactions
+- Provide art authentication or provenance verification
+- Access external art databases or inventories
+- Remember preferences across different browser sessions
+- Suggest artworks not in the current inventory
 
-## Current Features
+## Technology Stack
 
-* **AI Agent-driven discovery**
-  Ask for art by country, region, style, theme, color, price, or a specific title (e.g., “naturalistic blend of animal and bird”), and the AI agent will both answer and act.
+### Frontend
+- **React 18** with Vite for fast development and building
+- **Modern CSS** with custom components and responsive design
+- **Real-time Chat Interface** with structured message rendering
 
-* **Two-pass LLM flow with fallback**
+### Backend
+- **Python Flask** API server
+- **LangChain** for AI agent orchestration and memory management
+- **OpenAI GPT-4** for natural language understanding and generation
+- **Intelligent Search Tools** for inventory analysis and filtering
 
-  1. **Pass 1**: AI agent generates a short, friendly reply suggesting 2–5 works from the actual inventory.
-  2. **Pass 2**: Extracts the titles for gallery navigation.
-  3. **Fallback**: If extraction misses titles, the backend deterministically matches them from the reply.
+### Architecture
+- **Smart Agent System** with conversation memory and tool usage
+- **Intent Classification** to route between information and suggestions
+- **LLM-Powered Extraction** for artwork name identification
+- **Structured Response Rendering** with numbered lists and conclusions
 
-* **Action-oriented navigation**
-  The AI agent not only recommends but also scrolls or focuses the gallery so the suggested pieces are front and center.
+## Quick Start
 
-* **Inventory-grounded results**
-  The AI agent only uses artworks from `backend/art.txt`, with geographic mappings for broader queries.
-
-* **Clean and modular architecture**
-
-  * React/Vite UI with a docked chat widget.
-  * Flask backend with minimal endpoints for health and chat.
-
----
-
-## Architecture
-
-**Frontend (`artisty-frontend/`)**
-
-* React + Vite
-* Chat UI component (`ChatBot.jsx`) to send queries and trigger gallery actions
-* State management for search/focus
-
-**Backend (`backend/`)**
-
-* Flask app (`app.py`)
-* Inventory in `art.txt`
-* Prompts in `prompts.py` for AI agent’s Pass 1 & 2 logic
-* Deterministic title-matching fallback
-
-**Data Flow**
-
-1. User sends query → AI agent runs Pass 1 → returns friendly suggestions
-2. Backend extracts titles → frontend triggers gallery focus
-3. If LLM fails extraction, fallback ensures titles are still matched
-
----
-
-## Setup
-
-**Backend**
-
+### Backend Setup
 ```bash
 cd backend
-python3 -m venv .venv
-source .venv/bin/activate
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
+
+# Create .env file
+echo "OPENAI_API_KEY=your_openai_key_here" > .env
+echo "OPENAI_MODEL=gpt-4o-mini" >> .env
+
+python main.py
 ```
 
-**Environment Variables (`.env`)**
-
-```env
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4o-mini-2024-07-18
-PORT=5050
-```
-
-**Run Backend**
-
+### Frontend Setup
 ```bash
-python app.py
-```
-
-**Frontend**
-
-```bash
-cd artisty-frontend
+cd frontend
 npm install
 npm run dev
 ```
 
-Visit: [http://localhost:5173](http://localhost:5173)
+Visit http://localhost:5173 to start exploring the gallery.
 
----
+## How Search Works in Frontend
 
-## Future Scope
+The frontend implements intelligent search through multiple mechanisms:
 
-* **Blockchain integration** for provenance and authenticity:
+### **1. Chatbot-Triggered Search**
+- AI agent analyzes user requests and extracts artwork names
+- Names are sent as space-separated pairs to the frontend
+- Frontend treats these as explicit selections and displays only those artworks in the suggested order
+- Example: Agent suggests "neon pride jungle rhythm" → Frontend shows those exact 2 artworks
 
-  * Smart contracts for transparent transactions without middlemen.
-  * On-chain ownership history and anti-duplication safeguards.
-  * Tokenized authenticity certificates (NFT or verifiable credentials).
-  * Automated percentage splits to designated wallets.
+### **2. Manual Search Bar**
+- Users can type directly in the search bar
+- Combines semantic search (AI-powered understanding) with keyword fallback
+- Semantic search finds top 5 relevant pieces based on meaning and context
+- Keyword search provides additional matches for comprehensive results
+- Auto-scrolls to gallery section when search is performed
 
-* **Multi-agent orchestration**
+## Example Interactions
 
-  * Planner agent to decide on filters, comparisons, and upselling.
-  * Critic agent to validate suggestions against style/geography rules.
+**Regional Search:**
+- "What do you have from the UK?" → Shows only UK/England artworks
+- "Show me pieces from Asia" → Displays artworks from Japan, China, Korea, Thailand, India, Vietnam
 
-* **Personalization**
+**Style and Color:**
+- "I want something blue and calming" → Suggests blue-toned, serene pieces
+- "Show me vibrant abstract art" → Recommends colorful, energetic abstract works
 
-  * Session-based memory for preferences (colors, price range, origins).
-  * Progressive recommendations over time.
+**Price and Preference:**
+- "What's available under $1500?" → Lists artworks within budget
+- "I need something for my office" → Suggests professional, sophisticated pieces
 
-* **Traceability**
+## Contributing
 
-  * IPFS or similar content-addressed storage for artwork metadata.
-  * Public verification pages for provenance.
-
----
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
 ## License
 
-MIT
+MIT License - see LICENSE file for details
 
----
-
-## Acknowledgements
-
-* Built with React, Vite, Flask, and OpenAI’s Responses API.
-* Inventory
