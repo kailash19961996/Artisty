@@ -45,12 +45,21 @@ All decision-making is handled by AI agents rather than manual rules, ensuring i
 - **React 18** with Vite for fast development and building
 - **Modern CSS** with custom components and responsive design
 - **Real-time Chat Interface** with structured message rendering
+- **Hosted on AWS Amplify** with automatic CI/CD from GitHub
 
 ### Backend
-- **Python Flask** API server
+- **AWS Lambda (Python 3.11)** serverless functions
+- **API Gateway** as the HTTP entry point (replaces Flask API server)
+- **Lambda Layers** (OpenAI, LangChain, Pydantic) packaged with Docker & S3 for Linux compatibility
 - **LangChain** for AI agent orchestration and memory management
-- **OpenAI GPT-4** for natural language understanding and generation
-- **Intelligent Search Tools** for inventory analysis and filtering
+- **OpenAI GPT-4o-mini** for natural language understanding and generation
+- **CloudWatch** for logging and monitoring
+
+### Deployment & Infra
+- **S3** for Lambda layer storage
+- **CloudWatch** for monitoring/logging
+- **AWS IAM** for security and access control
+- **Amplify** for frontend hosting & environment management
 
 ### Architecture
 - **Smart Agent System** with conversation memory and tool usage
