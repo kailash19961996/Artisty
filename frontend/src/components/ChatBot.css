@@ -69,6 +69,9 @@
 /* Chat Panel - Enhanced glassmorphism with more glow */
 .chatbot-panel {
   position: fixed;
+  /* shared sizing variables so the whole widget scales relatively */
+  --chat-radius: 1.5rem;
+  --chat-font-size: 0.82rem;
   background: linear-gradient(90deg, 
     rgba(255, 255, 255, 0.12) 0%, 
     rgba(139, 92, 246, 0.08) 25%, 
@@ -90,6 +93,7 @@
   flex-direction: column;
   z-index: 49;
   overflow: hidden;
+  border-radius: var(--chat-radius);
 }
 
 /* Desktop - Split screen with enhanced glow and minimalistic border */
@@ -100,7 +104,7 @@
     bottom: 1rem;
     width: calc(30% - 2rem);
     height: auto;
-    border-radius: 1.5rem;
+    border-radius: var(--chat-radius);
     border: 1px solid rgba(255, 255, 255, 0.25);
     box-shadow: 
       0 32px 64px -12px rgba(139, 92, 246, 0.2),
@@ -118,8 +122,10 @@
     bottom: calc(0.6rem + env(safe-area-inset-bottom, 0px));
     left: auto;                 /* right aligned */
     right: 0.6rem;              /* snug to right */
-    width: 50vw;                /* open to 50% of screen horizontally */
-    border-radius: 0.9rem;
+    width: 60vw;                /* 60% width on small screens */
+    --chat-radius: 1rem;        /* keep header/panel corners perfectly aligned */
+    --chat-font-size: clamp(0.68rem, 3vw, 0.78rem);
+    border-radius: var(--chat-radius);
     border: 1px solid rgba(255, 255, 255, 0.22);
     /* Shrink glow on phones: lower blur + softer, smaller shadows */
     backdrop-filter: blur(14px);
@@ -134,34 +140,34 @@
   }
 
   /* Snap heights with 30% default and cap at 50% */
-  .chatbot-panel[data-size="peek"] { height: 40svh; }  /* default open ~40% vertically */
-  .chatbot-panel[data-size="mid"]  { height: 45svh; }
-  .chatbot-panel[data-size="full"] { height: 50svh; }
-  .chatbot-panel { max-height: 50svh; }
+  .chatbot-panel[data-size="peek"] { height: 40svh; }
+  .chatbot-panel[data-size="mid"]  { height: 46svh; }
+  .chatbot-panel[data-size="full"] { height: 54svh; }
+  .chatbot-panel { max-height: 54svh; }
 
-  /* Minimal header on mobile - much smaller relative to screen */
-  .chatbot-header { padding: 0.15rem 0.3rem; min-height: 1.1rem; }
-  .chatbot-header h3 { font-size: clamp(0.5rem, 2.4vw, 0.58rem); font-weight: 600; line-height: 1.1; }
-  .chatbot-header p { font-size: clamp(0.35rem, 1.8vw, 0.4rem); line-height: 1; }
+  /* Minimal header on mobile – slightly larger for clarity */
+  .chatbot-header { padding: 0.3rem 0.5rem; min-height: 1.4rem; }
+  .chatbot-header h3 { font-size: clamp(0.6rem, 2.8vw, 0.72rem); font-weight: 600; line-height: 1.15; }
+  .chatbot-header p { font-size: clamp(0.44rem, 2vw, 0.52rem); line-height: 1.05; }
   .chatbot-header-logo-icon { width: 0.75rem; height: 0.75rem; }
   .chatbot-header-logo-icon span { font-size: 0.42rem; }
   /* Close button: smaller, further from the right edge, and a bit higher */
   .chatbot-close { 
     position: absolute; 
-    top: 0.12rem; 
-    right: 0.7rem; 
-    padding: 0.12rem; 
-    width: 0.8rem; 
-    height: 0.8rem; 
-    font-size: 0.7rem; 
+    top: 0.14rem; 
+    right: 0.55rem; 
+    padding: 0; 
+    width: 1rem; 
+    height: 1rem; 
+    font-size: 1rem; 
   }
-  .chatbot-close svg { width: 0.7rem; height: 0.7rem; }
+  .chatbot-close svg { width: 1rem; height: 1rem; display: block; }
 
   .chatbot-messages { padding: 0.4rem; gap: 0.4rem; }
   .chatbot-input-area { padding: 0.5rem; }
   .chatbot-input-wrapper { display: flex; gap: 0.4rem; align-items: center; }
   .chatbot-input { 
-    font-size: clamp(0.72rem, 3.3vw, 0.8rem); /* shrink input text slightly */
+    font-size: var(--chat-font-size); /* keep input text consistent with messages */
     padding: 0.45rem 0.55rem; 
     border-radius: 0.5rem; 
     flex: 1;
@@ -181,13 +187,13 @@
     height: 2.2rem;
   }
   .message { 
-    --chat-message-font-size: 0.6rem; 
+    --chat-message-font-size: var(--chat-font-size);
     --chat-message-padding-y: 0.3rem; 
     --chat-message-padding-x: 0.5rem; 
     --chat-message-max-width: 78%; 
   }
 
-  .typing-dot { width: 0.28rem; height: 0.28rem; }
+  .typing-dot { width: calc(var(--chat-font-size) * 0.45); height: calc(var(--chat-font-size) * 0.45); }
 
   /* Size toggle (chevron) button */
   .chatbot-size-toggle {
@@ -226,7 +232,7 @@
   min-height: 4.5rem;
   display: flex;
   align-items: center;
-  border-radius: 1.5rem 1.5rem 0 0;
+  border-radius: var(--chat-radius) var(--chat-radius) 0 0;
   position: relative;
 }
 
@@ -243,7 +249,7 @@
     rgba(168, 85, 247, 0.4) 50%, 
     rgba(139, 92, 246, 0.3) 75%, 
     transparent 100%);
-  border-radius: 1.5rem 1.5rem 0 0;
+  border-radius: var(--chat-radius) var(--chat-radius) 0 0;
 }
 
 .chatbot-header-content {
@@ -293,22 +299,17 @@
 }
 
 .chatbot-close {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;           /* remove circular background */
+  border: none;                      /* no border */
   color: #6b7280;
   cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  padding: 0.25rem;                  /* small hit area without visual background */
+  border-radius: 0;                  /* no rounding */
+  transition: color 0.2s ease;
 }
 
 .chatbot-close:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.3);
   color: #ef4444;
-  transform: scale(1.1);
 }
 
 /* Messages */
@@ -364,7 +365,7 @@
   max-width: var(--chat-message-max-width, 68%);
   padding: var(--chat-message-padding-y, 0.6rem) var(--chat-message-padding-x, 0.9rem);
   border-radius: 1.25rem;
-  font-size: var(--chat-message-font-size, 0.82rem);
+  font-size: var(--chat-message-font-size, var(--chat-font-size));
   line-height: 1.6;
   position: relative;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -440,8 +441,8 @@
 }
 
 .typing-dot {
-  width: 0.5rem;
-  height: 0.5rem;
+  width: calc(var(--chat-font-size) * 0.6);
+  height: calc(var(--chat-font-size) * 0.6);
   border-radius: 50%;
   animation: bounce 1.4s infinite ease-in-out both;
 }
@@ -578,14 +579,14 @@
 
 /* FINAL MOBILE OVERRIDES – placed at end to defeat base styles above */
 @media (max-width: 767px) {
-  .chatbot-panel { width: 50vw !important; }
+  .chatbot-panel { width: 60vw !important; }
 
   /* Header and footer each take 15% height */
   .chatbot-panel .chatbot-header { 
     padding: 0.25rem 0.5rem !important; 
     min-height: 1.35rem !important; 
-    height: 15% !important;
-    flex: 0 0 15% !important;
+    height: auto !important;
+    flex: 0 0 auto !important;
     display: flex !important;
     align-items: center !important;
   }
@@ -603,36 +604,36 @@
   }
 
   .chatbot-panel .chatbot-input-area { 
-    padding: 0.5rem !important; 
-    height: 15% !important; 
-    flex: 0 0 15% !important; 
+    padding: 0.45rem !important; 
+    height: auto !important; 
+    flex: 0 0 auto !important; 
   }
   .chatbot-panel .chatbot-input-wrapper { gap: 0.4rem !important; }
   .chatbot-panel .chatbot-input { 
-    font-size: clamp(0.75rem, 3.5vw, 0.85rem) !important; 
-    padding: 0.5rem 0.6rem !important; 
-    min-height: 2.2rem !important; 
+    font-size: var(--chat-font-size) !important; 
+    padding: 0.42rem 0.55rem !important; 
+    min-height: 1.9rem !important; 
     border-radius: 0.5rem !important; 
   }
   .chatbot-panel .chatbot-send-btn { 
-    font-size: clamp(0.62rem, 2.6vw, 0.7rem) !important; 
-    padding: 0.35rem 0.55rem !important; 
-    height: 2.2rem !important; 
-    min-width: 2.5rem !important; 
+    font-size: calc(var(--chat-font-size) * 0.9) !important; 
+    padding: 0.3rem 0.5rem !important; 
+    height: 1.9rem !important; 
+    min-width: 2.3rem !important; 
     border-radius: 0.5rem !important; 
   }
 
   /* Messages occupy remaining 70% with tighter spacing */
   .chatbot-panel .chatbot-messages { 
     flex: 1 1 auto !important; 
-    height: 70% !important; 
+    height: auto !important; 
     padding: 0.35rem !important; 
     gap: 0.3rem !important; 
   }
   .chatbot-panel .message { 
-    line-height: 1.1 !important; 
+    line-height: 1.25 !important; 
     --chat-message-padding-y: 0.25rem; 
     --chat-message-padding-x: 0.45rem; 
-    font-size: 0.6rem !important; 
+    font-size: var(--chat-font-size) !important; 
   }
 }
