@@ -1,6 +1,0 @@
-# Ignore everything by default
-*
-
-# Allow frontend folder
-!frontend/**
-!amplify.yml
