@@ -14,10 +14,10 @@ Traditional art galleries and e-commerce platforms rely on basic filters and key
 ## Screenshots
 
 ### Main Page
-![Main Page](docs/images/main-page.png)
+![Main Page](frontend/docs/images/main-page.png)
 
 ### Agent in Action
-![Agent helping the user navigate artworks](docs/images/agent-navigate.png)
+![Agent helping the user navigate artworks](frontend/docs/images/agent-navigate.png)
 
 
 ## Architecture Overview
