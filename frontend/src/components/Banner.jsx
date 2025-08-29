@@ -25,7 +25,7 @@ const Banner = () => {
     <div className={`banner ${isAnimating ? 'banner-fade-out' : ''}`}>
       <div className="banner-content">
         <p className="banner-description">
-          Intelligent gallery AI agent that understands contextual search. Ask for artworks by style, color, country, or mood - no more keyword hunting through endless filters.
+          An agentic AI-powered gallery guide — describe what you feel, and it finds the art.
         </p>
         
         <div className="banner-tech">
