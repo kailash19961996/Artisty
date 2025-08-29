@@ -2,7 +2,7 @@ import json
 import os
 from utils import create_assistant
 
-# Initialize the assistant globally for Lambda reuse
+# Initialize the assistant globally for Lambda reuses
 assistant = None
 
 ALLOWED_ORIGINS = [
