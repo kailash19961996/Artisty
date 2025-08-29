@@ -35,8 +35,12 @@ const Banner = () => {
             <span className="tech-item">JS</span>
             <span className="tech-item">Python</span>
             <span className="tech-item">LangChain</span>
-            <span className="tech-item">OpenAI GPT-4</span>
-            <span className="tech-item">Flask</span>
+            <span className="tech-item">OpenAI</span>
+            <span className="tech-item">AWS Amplify</span>
+            <span className="tech-item">AWS API Gateway</span>
+            <span className="tech-item">AWS Lambda</span>
+            <span className="tech-item">AWS S3</span>
+            <span className="tech-item">AWS CloudWatch</span>
           </div>
           <div className="banner-developer">Developed by KAI</div>
         </div>
