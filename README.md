@@ -8,6 +8,18 @@ Artisty transforms the way people discover and purchase art by combining intelli
 
 Traditional art galleries and e-commerce platforms rely on basic filters and keyword search, making art discovery frustrating and limiting. Users struggle to find pieces that match their aesthetic preferences, budget, or specific requirements using conventional search methods.
 
+## Live Demo
+[Visit the Artisty Website](https://main.d22zce484yggk5.amplifyapp.com/)
+
+## Screenshots
+
+### Main Page
+![Main Page](docs/images/main-page.png)
+
+### Agent in Action
+![Agent helping the user navigate artworks](docs/images/agent-navigate.png)
+
+
 ## Architecture Overview
 
 The system uses a multi-agent approach with LangChain orchestration:
