@@ -184,81 +184,89 @@ const ChatBot = ({ isOpen, onToggle }) => {
       
       setMessages(prev => [...prev, initialBotMessage]);
       
-      // Process streaming response
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let fullResponse = '';
-      let finalActions = [];
+      // Get all SSE data at once (AWS Lambda limitation) and simulate streaming
+      const responseText = await response.text();
+      console.log('[DEBUG] Raw SSE response:', responseText);
       
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || ''; // Keep incomplete line in buffer
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              
-              // Handle actions immediately when they arrive (before or during streaming)
-              const actions = data.web_actions || data.actions || [];
-              if (actions && actions.length > 0) {
-                console.log('[DEBUG] Received actions:', actions);
-                actions.forEach(action => {
-                  console.log('[DEBUG] Processing action:', action);
-                  if (action.type === 'search') {
-                    triggerSearch(action.value);
-                  } else if (action.type === 'scroll') {
-                    triggerScrollToSection(action.value);
-                  } else if (action.type === 'quick_view') {
-                    console.log('[DEBUG] Triggering quick view for:', action.value);
-                    triggerQuickView(action.value);
-                  } else if (action.type === 'add_to_cart') {
-                    console.log('[DEBUG] Triggering add to cart for:', action.value);
-                    triggerAddToCart(action.value);
-                  } else if (action.type === 'navigate') {
-                    console.log('[DEBUG] Triggering navigation to:', action.value);
-                    triggerNavigation(action.value);
-                  } else if (action.type === 'checkout') {
-                    console.log('[DEBUG] Triggering checkout');
-                    triggerCheckout();
-                  }
-                });
-              }
-              
-              // Handle text content (if not an actions-only chunk)
-              if (data.chunk && !data.actions_only) {
-                fullResponse += data.chunk;
-                setCurrentStreamMessage(fullResponse);
-                
-                // Update the streaming message
-                setMessages(prev => prev.map(msg => 
-                  msg.id === streamMessageId 
-                    ? { ...msg, text: fullResponse }
-                    : msg
-                ));
-              }
-              
-              if (data.is_complete) {
-                // Finalize the message
-                setMessages(prev => prev.map(msg => 
-                  msg.id === streamMessageId 
-                    ? { ...msg, text: data.full_response || fullResponse, isStreaming: false }
-                    : msg
-                ));
-                
-                setIsStreaming(false);
-                setCurrentStreamMessage('');
-                break;
-              }
-            } catch (e) {
-              console.error('Error parsing streaming data:', e);
-            }
+      // Parse all SSE chunks
+      const lines = responseText.split('\n');
+      const chunks = [];
+      
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            chunks.push(data);
+          } catch (e) {
+            console.error('Error parsing SSE chunk:', e, line);
           }
+        }
+      }
+      
+      console.log('[DEBUG] Parsed SSE chunks:', chunks.length);
+      
+      // Process actions from the first chunk (if any)
+      const firstChunk = chunks[0];
+      if (firstChunk && firstChunk.web_actions && firstChunk.web_actions.length > 0) {
+        console.log('[DEBUG] Processing actions from first chunk:', firstChunk.web_actions);
+        firstChunk.web_actions.forEach(action => {
+          console.log('[DEBUG] Processing action:', action);
+          if (action.type === 'search') {
+            triggerSearch(action.value);
+          } else if (action.type === 'scroll') {
+            triggerScrollToSection(action.value);
+          } else if (action.type === 'quick_view') {
+            console.log('[DEBUG] Triggering quick view for:', action.value);
+            triggerQuickView(action.value);
+          } else if (action.type === 'add_to_cart') {
+            console.log('[DEBUG] Triggering add to cart for:', action.value);
+            triggerAddToCart(action.value);
+          } else if (action.type === 'navigate') {
+            console.log('[DEBUG] Triggering navigation to:', action.value);
+            triggerNavigation(action.value);
+          } else if (action.type === 'checkout') {
+            console.log('[DEBUG] Triggering checkout');
+            triggerCheckout();
+          }
+        });
+      }
+      
+      // Simulate streaming by processing chunks with delays
+      let fullResponse = '';
+      
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        
+        // Skip actions-only chunks for text display
+        if (chunk.actions_only) continue;
+        
+        if (chunk.chunk) {
+          fullResponse += chunk.chunk;
+          
+          // Update the streaming message
+          setMessages(prev => prev.map(msg => 
+            msg.id === streamMessageId 
+              ? { ...msg, text: fullResponse }
+              : msg
+          ));
+          
+          // Add delay to simulate streaming (adjust as needed)
+          if (i < chunks.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
+        }
+        
+        // Handle completion
+        if (chunk.is_complete) {
+          setMessages(prev => prev.map(msg => 
+            msg.id === streamMessageId 
+              ? { ...msg, text: chunk.full_response || fullResponse, isStreaming: false }
+              : msg
+          ));
+          
+          setIsStreaming(false);
+          setCurrentStreamMessage('');
+          break;
         }
       }
       
