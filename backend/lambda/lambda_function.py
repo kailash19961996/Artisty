@@ -24,7 +24,7 @@ ALLOWED_HEADERS = "Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Securit
 def cors_headers(origin: str | None) -> dict:
     allowed_origin = origin if origin in ALLOWED_ORIGINS else ALLOWED_ORIGINS[0]
     return {
-        "Access-Control-Allow-Origin": *,
+        "Access-Control-Allow-Origin": allowed_origin,
         "Access-Control-Allow-Credentials": "false",
         "Access-Control-Allow-Methods": ALLOWED_METHODS,
         "Access-Control-Allow-Headers": ALLOWED_HEADERS,
@@ -102,6 +102,91 @@ def lambda_handler(event, context):
         or normalized_path.endswith("/api/message")
         or normalized_path.endswith("/api/chat")
     )
+    
+    # Streaming chat endpoint
+    is_stream_path = (
+        normalized_path.endswith("/api/chat/stream")
+        or normalized_path.endswith("/chat/stream")
+    )
+    
+    # Handle streaming chat endpoint
+    if method == "POST" and is_stream_path:
+        try:
+            raw = event.get("body") or "{}"
+            data = json.loads(raw) if isinstance(raw, str) else (raw or {})
+            user_message = (data.get("text") or data.get("message") or "").strip()
+
+            if not user_message:
+                return respond(400, {"success": False, "error": "Missing 'message' in body"}, origin)
+
+            print(f"\n[USER] {user_message}")
+            
+            # Get the assistant and process the message with streaming
+            ai_assistant = get_assistant()
+            
+            # For Lambda, we need to collect all streaming chunks and return them
+            # as the browser doesn't support real streaming in Lambda's response model
+            chunks = []
+            final_response = None
+            
+            for chunk_data in ai_assistant.process_message_stream(user_message):
+                chunks.append(chunk_data)
+                if chunk_data.get("is_complete"):
+                    final_response = chunk_data
+                    print(f"[ASSISTANT] {chunk_data.get('full_response', '')}")
+                    print(f"[INTENT] {chunk_data.get('intent', '')}")
+                    print(f"[ARTWORKS] {chunk_data.get('suggested_artworks', [])}")
+                    print(f"[DEBUG] Web actions: {chunk_data.get('web_actions', [])}")
+            
+            # Return the streaming chunks or final response
+            if final_response:
+                response_data = {
+                    "response": final_response.get("full_response", ""),
+                    "web_actions": final_response.get("web_actions", []),
+                    "actions": final_response.get("web_actions", []),  # Compatibility alias
+                    "intent": final_response.get("intent", "general_info"),
+                    "suggested_artworks": final_response.get("suggested_artworks", []),
+                    "status": "success",
+                    "agent_used": True,
+                    "success": True,
+                    "streaming_chunks": chunks  # Include all chunks for client-side streaming
+                }
+            else:
+                response_data = {
+                    "response": "Stream completed without final response",
+                    "web_actions": [],
+                    "actions": [],
+                    "intent": "general_info", 
+                    "suggested_artworks": [],
+                    "status": "success",
+                    "agent_used": True,
+                    "success": True,
+                    "streaming_chunks": chunks
+                }
+            
+            return respond(200, response_data, origin)
+            
+        except json.JSONDecodeError:
+            return respond(400, {"success": False, "error": "Invalid JSON"}, origin)
+        except Exception as e:
+            print(f"Error processing streaming chat message: {str(e)}")
+            
+            # Fallback response for streaming
+            response_data = {
+                "response": f"I apologize, but I'm having technical difficulties. Please try again! (Error: {str(e)})",
+                "web_actions": [],
+                "actions": [],
+                "intent": "general_info",
+                "suggested_artworks": [],
+                "status": "error",
+                "agent_used": False,
+                "success": False,
+                "error": str(e)
+            }
+            
+            return respond(500, response_data, origin)
+    
+    # Handle regular chat endpoint
     if method == "POST" and is_chat_path:
         try:
             raw = event.get("body") or "{}"
@@ -122,18 +207,15 @@ def lambda_handler(event, context):
             print(f"[INTENT] {result.intent}")
             print(f"[ARTWORKS] {result.names}")
             
-            # Handle web actions from the agent
-            web_actions = []
-            if result.names and result.intent in ["art_suggestion", "both"]:
-                search_string = " ".join(result.names).lower()
-                web_actions = [
-                    {"type": "search", "value": search_string},
-                    {"type": "scroll", "value": "art-collection"},
-                ]
+            # Use web actions from agent result (matches main.py functionality)
+            web_actions = result.web_actions if hasattr(result, 'web_actions') else []
+            print(f"[DEBUG] Web actions being sent to frontend: {web_actions}")
             
+            # Include both keys for compatibility: 'web_actions' and short alias 'actions'
             response_data = {
                 "response": result.response,
                 "web_actions": web_actions,
+                "actions": web_actions,  # Compatibility alias
                 "intent": result.intent,
                 "suggested_artworks": result.names,
                 "status": "success",

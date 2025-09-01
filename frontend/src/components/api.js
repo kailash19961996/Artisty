@@ -8,5 +8,8 @@ const stripApiForAws = (p) =>
 export const apiFetch = (path, opts = {}) => {
   const finalPath = stripApiForAws(normalize(path));
   const url = `${API_BASE}${finalPath}`;
-  return fetch(url, { ...opts, headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) }});
+  const method = (opts.method || 'GET').toUpperCase();
+  const headers = { ...(opts.headers || {}) };
+  if (method !== 'GET' && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+  return fetch(url, { ...opts, headers });
 };
