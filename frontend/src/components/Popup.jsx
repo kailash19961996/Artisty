@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import './Popup.css';
 
-const Popup = ({ isOpen, artwork, onClose }) => {
+const Popup = ({ isOpen, artwork, onClose, onAddToCart }) => {
   // Handle ESC key to close popup
   useEffect(() => {
     if (!isOpen) return;
@@ -58,7 +58,10 @@ const Popup = ({ isOpen, artwork, onClose }) => {
           <p className="popup-description">{artwork.description}</p>
           <div className="popup-footer">
             <p className="popup-price">{formatPrice(artwork.price)}</p>
-            <button className="popup-add-to-cart">
+            <button 
+              className="popup-add-to-cart"
+              onClick={onAddToCart}
+            >
               Add to Cart
             </button>
           </div>

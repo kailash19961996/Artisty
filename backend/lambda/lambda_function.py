@@ -124,67 +124,39 @@ def lambda_handler(event, context):
             # Get the assistant and process the message with streaming
             ai_assistant = get_assistant()
             
-            # For Lambda, we need to collect all streaming chunks and return them
-            # as the browser doesn't support real streaming in Lambda's response model
-            chunks = []
-            final_response = None
+            # Build SSE response
+            sse_chunks = []
             
             for chunk_data in ai_assistant.process_message_stream(user_message):
-                chunks.append(chunk_data)
+                # Convert each chunk to SSE format
+                sse_line = f"data: {json.dumps(chunk_data)}\n\n"
+                sse_chunks.append(sse_line)
+                
                 if chunk_data.get("is_complete"):
-                    final_response = chunk_data
                     print(f"[ASSISTANT] {chunk_data.get('full_response', '')}")
                     print(f"[INTENT] {chunk_data.get('intent', '')}")
                     print(f"[ARTWORKS] {chunk_data.get('suggested_artworks', [])}")
                     print(f"[DEBUG] Web actions: {chunk_data.get('web_actions', [])}")
+                    break
             
-            # Return the streaming chunks or final response
-            if final_response:
-                response_data = {
-                    "response": final_response.get("full_response", ""),
-                    "web_actions": final_response.get("web_actions", []),
-                    "actions": final_response.get("web_actions", []),  # Compatibility alias
-                    "intent": final_response.get("intent", "general_info"),
-                    "suggested_artworks": final_response.get("suggested_artworks", []),
-                    "status": "success",
-                    "agent_used": True,
-                    "success": True,
-                    "streaming_chunks": chunks  # Include all chunks for client-side streaming
-                }
-            else:
-                response_data = {
-                    "response": "Stream completed without final response",
-                    "web_actions": [],
-                    "actions": [],
-                    "intent": "general_info", 
-                    "suggested_artworks": [],
-                    "status": "success",
-                    "agent_used": True,
-                    "success": True,
-                    "streaming_chunks": chunks
-                }
-            
-            return respond(200, response_data, origin)
+            # Return SSE response
+            return {
+                "statusCode": 200,
+                "headers": {
+                    **cors_headers(origin),
+                    "Content-Type": "text/plain; charset=utf-8",  # SSE format
+                    "Cache-Control": "no-cache",
+                    "Connection": "keep-alive"
+                },
+                "body": "".join(sse_chunks),  # All SSE chunks as one string
+                "isBase64Encoded": False,
+            }
             
         except json.JSONDecodeError:
             return respond(400, {"success": False, "error": "Invalid JSON"}, origin)
         except Exception as e:
             print(f"Error processing streaming chat message: {str(e)}")
-            
-            # Fallback response for streaming
-            response_data = {
-                "response": f"I apologize, but I'm having technical difficulties. Please try again! (Error: {str(e)})",
-                "web_actions": [],
-                "actions": [],
-                "intent": "general_info",
-                "suggested_artworks": [],
-                "status": "error",
-                "agent_used": False,
-                "success": False,
-                "error": str(e)
-            }
-            
-            return respond(500, response_data, origin)
+            return respond(500, {"success": False, "error": str(e)}, origin)
     
     # Handle regular chat endpoint
     if method == "POST" and is_chat_path:

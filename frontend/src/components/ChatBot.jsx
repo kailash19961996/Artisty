@@ -85,7 +85,51 @@ const ChatBot = ({ isOpen, onToggle }) => {
         throw new Error(errorText || `HTTP ${response.status}`);
       }
 
-      setBackendOnline(true);
+
+      // Check if response is JSON instead of SSE
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      console.log('Handling JSON response instead of SSE');
+      const data = await response.json();
+      setIsTyping(false);
+      
+      // Get the final response text
+      const finalText = data.response || data.full_response || '';
+      
+      // Add the complete message
+      const botMessage = {
+        id: Date.now() + 1,
+        text: finalText,
+        isBot: true,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, botMessage]);
+      
+      // Process any actions
+      const actions = data.web_actions || data.actions || [];
+      console.log('Processing actions:', actions);
+      actions.forEach(action => {
+        console.log('Processing action:', action);
+        if (action.type === 'search') {
+          triggerSearch(action.value);
+        } else if (action.type === 'scroll') {
+          triggerScrollToSection(action.value);
+        } else if (action.type === 'quick_view') {
+          triggerQuickView(action.value);
+        } else if (action.type === 'add_to_cart') {
+          triggerAddToCart(action.value);
+        } else if (action.type === 'navigate') {
+          triggerNavigation(action.value);
+        } else if (action.type === 'checkout') {
+          triggerCheckout();
+        }
+      });
+      
+      return; // Skip the SSE processing
+    }
+
+      // Handle SSE streaming response
+      console.log('Handling SSE streaming response');
       setIsStreaming(true);
       setCurrentStreamMessage('');
       setIsTyping(false); // Stop typing dots when streaming starts

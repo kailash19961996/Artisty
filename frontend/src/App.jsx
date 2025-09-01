@@ -362,6 +362,7 @@ function App() {
         isOpen={!!popupArtwork}
         artwork={popupArtwork}
         onClose={() => setPopupArtwork(null)}
+        onAddToCart={() => popupArtwork && addToCart(popupArtwork)}
       />
     </div>
   );

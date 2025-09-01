@@ -935,12 +935,14 @@ p {
     flex-direction: row;
   }
   
-  .app-container.chat-open .main-content {
+  .app-container.chat-open .main-content,
+  .app-container.chat-open > .cart-page {
     width: 70%;
     transition: width 0.3s ease;
   }
   
-  .app-container .main-content {
+  .app-container .main-content,
+  .app-container > .cart-page {
     width: 100%;
     transition: width 0.3s ease;
   }

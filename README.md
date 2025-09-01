@@ -1,8 +1,8 @@
 # Artisty
 
-**Agentic AI-powered art gallery with intelligent search and conversational assistance**
+**Agentic AI-powered art gallery with intelligent search, conversational assistance, and real-time actions**
 
-Artisty transforms the way people discover and purchase art by combining intelligent conversational AI agent with a curated gallery experience. Instead of traditional keyword search, users can naturally describe what they're looking for and receive personalized recommendations with real-time gallery navigation.
+Artisty transforms art discovery and purchase by combining intelligent conversational AI with a curated gallery experience. Users can naturally describe what they're looking for and receive personalized recommendations with real-time gallery navigation, cart management, and interactive actions—all through natural conversation.
 
 ## Problem Statement
 
