@@ -125,6 +125,7 @@ const ChatBot = ({ isOpen, onToggle }) => {
 
       // Check if response is JSON instead of SSE
     const contentType = response.headers.get('content-type') || '';
+    console.log('Response content-type:', contentType);
     if (contentType.includes('application/json')) {
       console.log('Handling JSON response instead of SSE');
       const data = await response.json();

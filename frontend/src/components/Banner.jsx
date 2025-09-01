@@ -26,7 +26,7 @@ const Banner = () => {
       <div className="banner-inner">
         <div className="banner-content">
           <p className="banner-description">
-            An agentic AI-powered gallery guide — describe what you feel, and it finds the art.
+          Shop art by feeling. Artisty’s closed-loop AI agent searches, navigates, and manages your cart in real time.
           </p>
           <div className="banner-tech">
             <span className="tech-label">Tech Stack</span>

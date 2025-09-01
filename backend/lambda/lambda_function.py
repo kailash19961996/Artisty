@@ -33,7 +33,7 @@ Security:
 @author Artisty Team
 @version 2.0.0 - Added SSE streaming and agentic capabilities
 """
-page
+
 import json
 import os
 from utils import create_assistant
@@ -208,6 +208,7 @@ def lambda_handler(event, context):
                 return respond(400, {"success": False, "error": "Missing 'message' in body"}, origin)
 
             print(f"\n[USER] {user_message}")
+            print(f"[DEBUG] Processing streaming request for path: {normalized_path}")
             
             # Get the assistant and process the message with streaming
             ai_assistant = get_assistant()
@@ -219,6 +220,7 @@ def lambda_handler(event, context):
                 # Convert each chunk to SSE format
                 sse_line = f"data: {json.dumps(chunk_data)}\n\n"
                 sse_chunks.append(sse_line)
+                print(f"[DEBUG] Generated SSE chunk: {len(sse_line)} bytes")
                 
                 if chunk_data.get("is_complete"):
                     print(f"[ASSISTANT] {chunk_data.get('full_response', '')}")
@@ -227,15 +229,20 @@ def lambda_handler(event, context):
                     print(f"[DEBUG] Web actions: {chunk_data.get('web_actions', [])}")
                     break
             
-            # Return SSE response
+            print(f"[DEBUG] Total SSE chunks: {len(sse_chunks)}, Total response size: {len(''.join(sse_chunks))} bytes")
+            
+            # Return SSE response with custom headers (don't use cors_headers which sets JSON content-type)
+            cors_base = cors_headers(origin)
+            sse_headers = {
+                **cors_base,
+                "Content-Type": "text/plain; charset=utf-8",  # Override JSON content-type for SSE
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive"
+            }
+            
             return {
                 "statusCode": 200,
-                "headers": {
-                    **cors_headers(origin),
-                    "Content-Type": "text/plain; charset=utf-8",  # SSE format
-                    "Cache-Control": "no-cache",
-                    "Connection": "keep-alive"
-                },
+                "headers": sse_headers,
                 "body": "".join(sse_chunks),  # All SSE chunks as one string
                 "isBase64Encoded": False,
             }
