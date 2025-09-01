@@ -1,3 +1,29 @@
+/**
+ * ARTISTY - Main Application Component
+ * 
+ * This is the root component for the Artisty art gallery application.
+ * It manages the entire application state and coordinates between different views:
+ * - Gallery view with art collection browsing
+ * - Cart view for shopping cart management
+ * - AI-powered chatbot integration with real-time actions
+ * 
+ * Key Features:
+ * - Agentic AI chatbot that can control UI (search, cart, navigation, popups)
+ * - Intelligent search combining semantic AI search with keyword filtering
+ * - Real-time cart management with visual feedback animations
+ * - Responsive layout that adapts when chatbot is open (70% content, 30% chat)
+ * - Event-driven architecture for AI agent communication
+ * 
+ * Architecture:
+ * - Uses custom events for AI agent communication (agentSearch, agentQuickView, etc.)
+ * - Implements dual search strategy: explicit artwork matching + semantic/keyword search
+ * - Manages cart state with visual feedback (animations, badges, floating stars)
+ * - Coordinates between gallery and cart views seamlessly
+ * 
+ * @author Artisty Team
+ * @version 2.0.0 - Added AI agent integration and streaming capabilities
+ */
+
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
@@ -11,21 +37,40 @@ import CartPage from './components/CartPage';
 import Popup from './components/Popup';
 
 function App() {
-  const [displayedArt, setDisplayedArt] = useState([]);
-  const [cart, setCart] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  // === STATE MANAGEMENT ===
+  
+  // Gallery & Search State
+  const [displayedArt, setDisplayedArt] = useState([]); // Currently displayed artworks
+  const [searchQuery, setSearchQuery] = useState(''); // Current search query
+  const [loading, setLoading] = useState(false); // Loading state for search operations
+  const [currentPage, setCurrentPage] = useState(0); // Pagination state
+  const [hasMore, setHasMore] = useState(true); // Whether more artworks can be loaded
+  
+  // Shopping Cart State
+  const [cart, setCart] = useState([]); // Shopping cart items
+  
+  // UI State Management
+  const [isChatOpen, setIsChatOpen] = useState(false); // Chatbot visibility
   const [currentView, setCurrentView] = useState('gallery'); // 'gallery' | 'cart'
-  const [popupArtwork, setPopupArtwork] = useState(null);
-  const itemsPerPage = 65;
+  const [popupArtwork, setPopupArtwork] = useState(null); // Artwork for quick-view popup
+  
+  // Configuration
+  const itemsPerPage = 65; // Number of items per page for pagination
+  // === INITIALIZATION ===
+  // Load initial artwork collection on component mount
   useEffect(() => {
     setDisplayedArt(artPieces.slice(0, itemsPerPage));
     setHasMore(artPieces.length > itemsPerPage);
   }, []);
+
+  // === AI AGENT EVENT HANDLERS ===
+  // This effect sets up event listeners for AI agent actions
+  // The chatbot can trigger various UI actions through custom events
   useEffect(() => {
+    /**
+     * Handle search requests from AI agent
+     * Triggered when agent suggests artworks or user asks to search
+     */
     const handleAgentSearch = (event) => {
       const { searchTerm } = event.detail;
       console.log('Agent triggered search:', searchTerm);

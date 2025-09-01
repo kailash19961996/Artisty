@@ -1,7 +1,41 @@
-"""LangChain-based smart store assistant for Artisty gallery.
+"""
+ARTISTY AI ASSISTANT - Advanced LangChain Agent System
 
-The assistant knows the inventory, can answer questions, and suggest artworks.
-Uses conversation memory and proper intent routing.
+This module implements the core AI agent for the Artisty art gallery application.
+It provides sophisticated conversational AI capabilities with structured tool usage
+for real-time UI control and intelligent artwork recommendations.
+
+Key Features:
+- LangChain-based agent with structured tools for UI actions
+- Conversation memory with context retention
+- Intelligent inventory search with semantic understanding
+- Streaming response generation with word-by-word delivery
+- Intent classification for appropriate response handling
+- Tool-based UI control (navigation, cart, popups, search)
+
+Architecture:
+- Uses OpenAI GPT-4o-mini for natural language understanding
+- Implements structured Pydantic schemas for tool inputs
+- Maintains conversation memory across interactions
+- Provides both streaming and synchronous processing modes
+- Handles error cases with graceful fallbacks
+
+Tools Available:
+- search_inventory: Intelligent search through artwork collection
+- list_countries: List all countries represented in gallery
+- get_artwork_details: Get specific artwork information
+- quick_view: Open artwork detail popup
+- add_to_cart: Add artwork to shopping cart
+- navigate: Navigate between gallery and cart views
+- proceed_to_checkout: Initiate checkout process
+
+Response Types:
+- art_suggestion: AI suggests specific artworks with UI actions
+- general_info: AI provides information without product suggestions
+- both: AI combines information with artwork suggestions
+
+@author Artisty Team
+@version 2.0.0 - Added streaming capabilities and enhanced tool system
 """
 
 from __future__ import annotations

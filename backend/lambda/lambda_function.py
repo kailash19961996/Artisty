@@ -1,8 +1,45 @@
+"""
+ARTISTY BACKEND - AWS Lambda Function Handler
+
+This Lambda function serves as the backend API for the Artisty art gallery application.
+It provides AI-powered conversational assistance with real-time streaming responses
+and agentic UI control capabilities.
+
+Key Features:
+- Server-Sent Events (SSE) streaming for real-time word-by-word responses
+- AI agent with tools for UI control (navigation, cart, popups, search)
+- CORS handling for cross-origin requests from the frontend
+- Health monitoring endpoint for backend status
+- Singleton pattern for AI assistant instance (Lambda container reuse)
+
+Endpoints:
+- GET /api/health - Health check and system status
+- POST /api/chat/stream - Streaming AI chat with real-time actions
+- POST /api/chat - Non-streaming AI chat (fallback)
+- OPTIONS /* - CORS preflight handling
+
+Architecture:
+- Uses LangChain agents with structured tools for UI actions
+- Implements streaming response generation with SSE format
+- Maintains conversation memory across requests within container lifetime
+- Handles CORS for multiple allowed origins (dev, production)
+
+Security:
+- CORS whitelist for allowed origins
+- Input validation and sanitization
+- Error handling with appropriate HTTP status codes
+- Environment variable validation for API keys
+
+@author Artisty Team
+@version 2.0.0 - Added SSE streaming and agentic capabilities
+"""
+page
 import json
 import os
 from utils import create_assistant
 
-# Initialize the assistant globally for Lambda reuse
+# Initialize the assistant globally for Lambda container reuse
+# This enables conversation memory persistence across requests
 assistant = None
 
 ALLOWED_ORIGINS = [
@@ -22,6 +59,18 @@ ALLOWED_METHODS = "GET,POST,OPTIONS"
 ALLOWED_HEADERS = "Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token"
 
 def cors_headers(origin: str | None) -> dict:
+    """
+    Generate CORS headers for API responses
+    
+    Handles cross-origin requests by setting appropriate CORS headers.
+    Uses whitelist approach for security - only allows specific origins.
+    
+    Args:
+        origin: The origin header from the request
+        
+    Returns:
+        dict: CORS headers for the response
+    """
     allowed_origin = origin if origin in ALLOWED_ORIGINS else ALLOWED_ORIGINS[0]
     return {
         "Access-Control-Allow-Origin": allowed_origin,
@@ -34,15 +83,37 @@ def cors_headers(origin: str | None) -> dict:
     }
 
 def respond(status: int, body: dict, origin: str | None) -> dict:
+    """
+    Create a standardized API Gateway response with CORS headers
+    
+    Args:
+        status: HTTP status code
+        body: Response body as dictionary
+        origin: Request origin for CORS headers
+        
+    Returns:
+        dict: API Gateway-formatted response
+    """
     return {
         "statusCode": status,
-        "headers": cors_headers(origin),  # Always use the same CORS headers
+        "headers": cors_headers(origin),
         "body": json.dumps(body),
         "isBase64Encoded": False,
     }
 
 def get_assistant():
-    """Get or create the assistant instance (singleton for Lambda container reuse)"""
+    """
+    Get or create the AI assistant instance (singleton pattern)
+    
+    Uses global variable to maintain assistant instance across Lambda invocations
+    within the same container, enabling conversation memory persistence.
+    
+    Returns:
+        ArtistryAssistant: The AI assistant instance
+        
+    Raises:
+        Exception: If OpenAI API key is not configured or assistant initialization fails
+    """
     global assistant
     if assistant is None:
         try:
@@ -60,7 +131,24 @@ def get_assistant():
 
 
 def lambda_handler(event, context):
-    # Basic logging to CloudWatch
+    """
+    AWS Lambda entry point for the Artisty backend API
+    
+    Handles all HTTP requests from the frontend, routing them to appropriate
+    handlers based on the HTTP method and path. Supports:
+    - Health checks (GET /api/health)
+    - AI chat streaming (POST /api/chat/stream) 
+    - AI chat non-streaming (POST /api/chat)
+    - CORS preflight (OPTIONS)
+    
+    Args:
+        event: API Gateway event object containing request details
+        context: Lambda context object (unused)
+        
+    Returns:
+        dict: API Gateway response with status, headers, and body
+    """
+    # Basic logging to CloudWatch for debugging
     print("Event:", json.dumps(event)[:2000])
 
     headers = event.get("headers") or {}

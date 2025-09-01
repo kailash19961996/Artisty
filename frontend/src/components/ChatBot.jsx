@@ -1,6 +1,43 @@
+/**
+ * ARTISTY CHATBOT - Intelligent AI Agent Interface
+ * 
+ * This component provides a sophisticated AI-powered chatbot that can:
+ * - Stream responses word-by-word using Server-Sent Events (SSE)
+ * - Execute real-time UI actions (search, navigation, cart management, popups)
+ * - Maintain conversation context and memory
+ * - Handle both JSON fallback and SSE streaming responses
+ * - Adapt UI for mobile and desktop environments
+ * 
+ * Key Features:
+ * - Real-time streaming responses with immediate action execution
+ * - Agentic capabilities: can control gallery navigation, cart operations, and UI elements
+ * - Responsive design with mobile-specific sizing (peek/mid/full modes)
+ * - Fallback responses when AI service is unavailable
+ * - Health monitoring of backend API connection
+ * 
+ * Architecture:
+ * - Uses custom events to communicate with parent App component
+ * - Handles both SSE streaming and JSON response formats
+ * - Implements structured message rendering with markdown support
+ * - Mobile-responsive with dynamic sizing based on screen size
+ * 
+ * AI Agent Actions:
+ * - search: Trigger gallery search with specific terms
+ * - scroll: Scroll to specific sections of the page
+ * - quick_view: Open artwork detail popup
+ * - add_to_cart: Add specific artwork to shopping cart
+ * - navigate: Navigate between gallery and cart views
+ * - checkout: Initiate checkout process
+ * 
+ * @param {boolean} isOpen - Whether the chatbot panel is visible
+ * @param {function} onToggle - Callback to toggle chatbot visibility
+ * 
+ * @author Artisty Team
+ * @version 2.0.0 - Added SSE streaming and agentic capabilities
+ */
+
 import React, { useState, useRef, useEffect } from 'react';
 import { apiFetch } from './api';
-
 
 const ChatBot = ({ isOpen, onToggle }) => {
   const [messages, setMessages] = useState([

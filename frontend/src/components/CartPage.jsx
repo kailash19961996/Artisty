@@ -1,3 +1,31 @@
+/**
+ * ARTISTY CART PAGE - Shopping Cart Management
+ * 
+ * Displays the user's shopping cart with comprehensive cart management features.
+ * Integrates with the AI agent system for checkout automation and provides
+ * responsive layout that works with the chatbot interface.
+ * 
+ * Features:
+ * - Cart item display with artwork details and pricing
+ * - Order summary with shipping calculation
+ * - Checkout modal with development placeholder
+ * - AI agent integration (responds to triggerCheckout events)
+ * - Responsive design that adapts when chatbot is open
+ * - Empty cart state with call-to-action
+ * 
+ * Layout Integration:
+ * - Takes full width when chatbot is closed
+ * - Resizes to 70% width when chatbot opens (desktop)
+ * - Maintains mobile-friendly responsive behavior
+ * 
+ * @param {Array} cart - Array of cart items (artworks)
+ * @param {function} onRemoveFromCart - Callback to remove items from cart
+ * @param {function} onGoBack - Callback to return to gallery view
+ * 
+ * @author Artisty Team
+ * @version 2.0.0 - Added AI agent integration and responsive layout
+ */
+
 import React, { useState, useEffect } from 'react';
 import './CartPage.css';
 

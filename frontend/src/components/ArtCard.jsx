@@ -1,3 +1,30 @@
+/**
+ * ARTISTY ART CARD - Individual Artwork Display Component
+ * 
+ * Displays individual artwork cards in the gallery with interactive features.
+ * Provides visual feedback for user actions and integrates with AI agent events.
+ * 
+ * Features:
+ * - Responsive image loading with error handling
+ * - Quick view overlay for artwork details
+ * - Add to cart with visual feedback animations
+ * - AI agent integration (responds to triggerAddToCartFeedback events)
+ * - Price formatting with internationalization
+ * - Loading states and error fallbacks
+ * 
+ * User Interactions:
+ * - Hover: Shows quick view overlay
+ * - Click Quick View: Opens artwork detail popup
+ * - Click Add to Cart: Adds artwork to cart with animation feedback
+ * 
+ * @param {Object} art - Artwork object with id, name, image, price, origin, description
+ * @param {function} onAddToCart - Callback function when artwork is added to cart
+ * @param {function} onQuickView - Callback function when quick view is triggered
+ * 
+ * @author Artisty Team
+ * @version 2.0.0 - Added AI agent integration and enhanced feedback
+ */
+
 import React, { useState, useEffect } from 'react';
 import './ArtCard.css';
 

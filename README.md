@@ -36,11 +36,14 @@ All decision-making is handled by AI agents rather than manual rules, ensuring i
 
 - **Natural Language Search**: Ask for art using everyday language like "show me vibrant pieces from Asia under $2000"
 - **Intelligent Recommendations**: AI analyzes your preferences and suggests 1-10+ relevant artworks
+- **Real-time Streaming Responses**: Word-by-word streaming with immediate actions
+- **Agentic Actions**: AI automatically navigates gallery, opens popups, adds to cart, and manages checkout
+- **Smart Cart Management**: "Show me my cart" → AI opens cart page and provides status
 - **Regional Understanding**: Knows geographic mappings (Asia = Japan, China, Korea, Thailand, India, Vietnam, etc.)
 - **Conversational Memory**: Remembers context within conversations for better assistance
 - **Real-time Gallery Navigation**: Automatically scrolls and displays suggested artworks
+- **Interactive UI Control**: AI controls quick-view popups, cart operations, and page navigation
 - **Inventory-Aware Responses**: Only suggests available pieces from the actual collection
-- **Multi-criteria Filtering**: Simultaneously search by country, color, style, theme, and price
 
 ## What It Cannot Do
 
@@ -60,11 +63,12 @@ All decision-making is handled by AI agents rather than manual rules, ensuring i
 - **Hosted on AWS Amplify** with automatic CI/CD from GitHub
 
 ### Backend
-- **AWS Lambda (Python 3.11)** serverless functions
-- **API Gateway** as the HTTP entry point (replaces Flask API server)
-- **Lambda Layers** (OpenAI, LangChain, Pydantic) packaged with Docker & S3 for Linux compatibility
-- **LangChain** for AI agent orchestration and memory management
-- **OpenAI GPT-4o-mini** for natural language understanding and generation
+- **AWS Lambda (Python 3.11)** serverless functions with streaming SSE support
+- **API Gateway** REST API with CORS-enabled endpoints (`/api/health`, `/api/chat/stream`)
+- **Lambda Layers** (OpenAI, LangChain, Pydantic) packaged with Docker for Linux compatibility
+- **LangChain Agents** with structured tools for UI actions (quick_view, add_to_cart, navigate, checkout)
+- **OpenAI GPT-4o-mini** for natural language understanding and agentic decision-making
+- **Server-Sent Events (SSE)** for real-time streaming responses
 - **CloudWatch** for logging and monitoring
 
 ### Deployment & Infra
@@ -74,10 +78,11 @@ All decision-making is handled by AI agents rather than manual rules, ensuring i
 - **Amplify** for frontend hosting & environment management
 
 ### Architecture
-- **Smart Agent System** with conversation memory and tool usage
-- **Intent Classification** to route between information and suggestions
-- **LLM-Powered Extraction** for artwork name identification
-- **Structured Response Rendering** with numbered lists and conclusions
+- **Agentic Tool System** with real-time UI control (navigation, cart, popups)
+- **Streaming Response Pipeline** with word-by-word delivery and immediate actions
+- **Intent Classification** for routing between information, suggestions, and UI actions
+- **LLM-Powered Extraction** for artwork name identification and action triggers
+- **Responsive Layout** with chatbot integration (30% chat, 70% content on desktop)
 
 ## Quick Start
 
@@ -99,7 +104,19 @@ python main.py
 ```bash
 cd frontend
 npm install
+
+# Create .env for API endpoint
+echo "VITE_API_BASE=http://127.0.0.1:5000" > .env
+
 npm run dev
+```
+
+### Production Deployment
+```bash
+# Set environment variable in AWS Amplify Console:
+# VITE_API_BASE=https://your-api-gateway-url.execute-api.region.amazonaws.com/prod/api
+
+# Deploy automatically via GitHub integration
 ```
 
 ## How Search Works in Frontend
@@ -121,17 +138,19 @@ The frontend implements intelligent search through multiple mechanisms:
 
 ## Example Interactions
 
-**Regional Search:**
-- "What do you have from the UK?" → Shows only UK/England artworks
-- "Show me pieces from Asia" → Displays artworks from Japan, China, Korea, Thailand, India, Vietnam
+**Regional Search with Actions:**
+- "What do you have from the UK?" → AI searches UK art + auto-scrolls to gallery
+- "Show me pieces from Asia" → Streams response + displays Japan, China, Korea, Thailand, India, Vietnam artworks
 
-**Style and Color:**
-- "I want something blue and calming" → Suggests blue-toned, serene pieces
-- "Show me vibrant abstract art" → Recommends colorful, energetic abstract works
+**Interactive Shopping:**
+- "Add Neon Pride to my cart" → AI adds artwork + shows cart animation + confirms
+- "Show me my cart" → AI navigates to cart page + provides status
+- "I want to see Golden Gaze closer" → AI opens quick-view popup
 
-**Price and Preference:**
-- "What's available under $1500?" → Lists artworks within budget
-- "I need something for my office" → Suggests professional, sophisticated pieces
+**Streaming Conversations:**
+- "I want something blue and calming" → Streams word-by-word response + suggests blue artworks
+- "What's available under $1500?" → Real-time filtering + immediate gallery update
+- "Take me to checkout" → AI navigates to cart + initiates checkout process
 
 ## Contributing
 
