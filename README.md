@@ -81,7 +81,7 @@ All decision-making is handled by AI agents rather than manual rules, ensuring i
 
 ## Quick Start
 
-### Backend Setup
+### Backend Setup - Local
 ```bash
 cd backend
 python -m venv venv
@@ -95,14 +95,12 @@ echo "OPENAI_MODEL=gpt-4o-mini" >> .env
 python main.py
 ```
 
-### Frontend Setup
+### Frontend Setup - Local
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-
-Visit http://localhost:5173 to start exploring the gallery.
 
 ## How Search Works in Frontend
 
@@ -145,5 +143,5 @@ The frontend implements intelligent search through multiple mechanisms:
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT License
 

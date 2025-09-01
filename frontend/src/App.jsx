@@ -7,14 +7,19 @@ import ArtCard from './components/ArtCard';
 import Banner from './components/Banner';
 import { artPieces, searchArtPieces, semanticSearchArtPieces } from './data/artData';
 import StatCounter from './components/StatCounter';
+import CartPage from './components/CartPage';
+import Popup from './components/Popup';
 
 function App() {
   const [displayedArt, setDisplayedArt] = useState([]);
+  const [cart, setCart] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [currentView, setCurrentView] = useState('gallery'); // 'gallery' | 'cart'
+  const [popupArtwork, setPopupArtwork] = useState(null);
   const itemsPerPage = 65;
   useEffect(() => {
     setDisplayedArt(artPieces.slice(0, itemsPerPage));
@@ -26,10 +31,89 @@ function App() {
       console.log('Agent triggered search:', searchTerm);
       handleSearch(searchTerm);
     };
+    
+    const handleAgentQuickView = (event) => {
+      const { artworkName } = event.detail;
+      console.log('[DEBUG] Agent quick view for:', artworkName);
+      
+      // Find artwork and open popup directly
+      const artwork = displayedArt.find(art => 
+        art.name.toLowerCase().includes(artworkName.toLowerCase()) ||
+        artworkName.toLowerCase().includes(art.name.toLowerCase())
+      );
+      
+      console.log('[DEBUG] Found artwork:', artwork);
+      
+      if (artwork) {
+        setPopupArtwork(artwork);
+        console.log('[DEBUG] Opened popup for:', artwork.name);
+      } else {
+        console.log('[DEBUG] Artwork not found for quick view:', artworkName);
+      }
+    };
+    
+    const handleAgentAddToCart = (event) => {
+      const { artworkName } = event.detail;
+      console.log('[DEBUG] Agent add to cart for:', artworkName);
+      
+      // Find artwork and add to cart
+      const artwork = displayedArt.find(art => 
+        art.name.toLowerCase().includes(artworkName.toLowerCase()) ||
+        artworkName.toLowerCase().includes(art.name.toLowerCase())
+      );
+      
+      console.log('[DEBUG] Found artwork for cart:', artwork);
+      
+      if (artwork) {
+        addToCart(artwork);
+        console.log('[DEBUG] Added to cart:', artwork.name);
+        
+        // Also trigger the visual feedback on the art card button
+        window.dispatchEvent(new CustomEvent('triggerAddToCartFeedback', { 
+          detail: { artworkId: artwork.id } 
+        }));
+      } else {
+        console.log('[DEBUG] Artwork not found for add to cart:', artworkName);
+      }
+    };
+    
+    const handleAgentNavigate = (event) => {
+      const { destination } = event.detail;
+      console.log('[DEBUG] Agent navigate to:', destination);
+      
+      if (destination === 'cart') {
+        setCurrentView('cart');
+        console.log('[DEBUG] Navigated to cart view');
+      } else if (destination === 'home') {
+        setCurrentView('gallery');
+        console.log('[DEBUG] Navigated to gallery view');
+      }
+    };
+    
+    const handleAgentCheckout = () => {
+      console.log('[DEBUG] Agent checkout triggered');
+      setCurrentView('cart');
+      // Trigger checkout modal after a brief delay
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('triggerCheckout'));
+        console.log('[DEBUG] Dispatched triggerCheckout event');
+      }, 500);
+    };
 
     window.addEventListener('agentSearch', handleAgentSearch);
-    return () => window.removeEventListener('agentSearch', handleAgentSearch);
-  }, []);
+    window.addEventListener('agentQuickView', handleAgentQuickView);
+    window.addEventListener('agentAddToCart', handleAgentAddToCart);
+    window.addEventListener('agentNavigate', handleAgentNavigate);
+    window.addEventListener('agentCheckout', handleAgentCheckout);
+    
+    return () => {
+      window.removeEventListener('agentSearch', handleAgentSearch);
+      window.removeEventListener('agentQuickView', handleAgentQuickView);
+      window.removeEventListener('agentAddToCart', handleAgentAddToCart);
+      window.removeEventListener('agentNavigate', handleAgentNavigate);
+      window.removeEventListener('agentCheckout', handleAgentCheckout);
+    };
+  }, [displayedArt]);
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -69,6 +153,86 @@ function App() {
     }, 600);
   };
 
+  // Cart helpers
+  const addToCart = (item) => {
+    setCart((prev) => {
+      const updated = [...prev, item];
+      const badge = document.getElementById('cart-badge');
+      const cartBtn = document.querySelector('.header-cart-btn');
+      
+      if (badge) {
+        badge.textContent = String(updated.length);
+        badge.hidden = updated.length === 0;
+        badge.classList.remove('pulse');
+        // trigger reflow then add
+        void badge.offsetWidth;
+        badge.classList.add('pulse');
+      }
+      
+      if (cartBtn) {
+        // Add shake and sparkle effects
+        cartBtn.classList.remove('shake', 'sparkle');
+        void cartBtn.offsetWidth; // trigger reflow
+        cartBtn.classList.add('shake', 'sparkle');
+        
+        // Add additional floating stars
+        const createFloatingStar = (delay = 0) => {
+          const star = document.createElement('span');
+          star.innerHTML = '★';
+          star.style.cssText = `
+            position: absolute;
+            font-size: 8px;
+            color: #8b5cf6;
+            text-shadow: 0 0 6px rgba(139, 92, 246, 0.8);
+            pointer-events: none;
+            z-index: 15;
+            opacity: 0;
+            top: ${Math.random() * 20 - 10}px;
+            left: ${Math.random() * 20 - 10}px;
+            animation: floatingStar 1s ease ${delay}ms;
+          `;
+          cartBtn.appendChild(star);
+          
+          setTimeout(() => {
+            if (star.parentNode) star.parentNode.removeChild(star);
+          }, 1000 + delay);
+        };
+        
+        // Create 3 floating stars with delays
+        createFloatingStar(0);
+        createFloatingStar(200);
+        createFloatingStar(400);
+        
+        // Remove effects after animation completes
+        setTimeout(() => {
+          cartBtn.classList.remove('shake', 'sparkle');
+        }, 1200);
+      }
+      
+      return updated;
+    });
+  };
+
+  const removeFromCart = (itemId) => {
+    setCart((prev) => {
+      const itemIndex = prev.findIndex(item => item.id === itemId);
+      if (itemIndex >= 0) {
+        const updated = [...prev];
+        updated.splice(itemIndex, 1);
+        const badge = document.getElementById('cart-badge');
+        if (badge) {
+          badge.textContent = String(updated.length);
+          badge.hidden = updated.length === 0;
+        }
+        return updated;
+      }
+      return prev;
+    });
+  };
+
+  const goToCart = () => setCurrentView('cart');
+  const goToGallery = () => setCurrentView('gallery');
+
   const loadMore = () => {
     setLoading(true);
     const nextPage = currentPage + 1;
@@ -90,11 +254,26 @@ function App() {
     }, 500);
   };
 
+  if (currentView === 'cart') {
+    return (
+      <div className={`app-container ${isChatOpen ? 'chat-open' : ''}`}>
+        <CartPage 
+          cart={cart} 
+          onRemoveFromCart={removeFromCart}
+          onGoBack={goToGallery}
+        />
+        <ChatBot 
+          isOpen={isChatOpen} 
+          onToggle={() => setIsChatOpen(!isChatOpen)} 
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={`app-container ${isChatOpen ? 'chat-open' : ''}`}>
-      <Banner />
       <div className="main-content">
-        <Header />
+        <Header onCartClick={goToCart} cartCount={cart.length} />
 
       <section className="hero-section">
         <div className="hero-container">
@@ -123,6 +302,7 @@ function App() {
           </div>
         </div>
       </section>
+      <Banner />
       <section id="art-collection" className="gallery-section">
         <div className="gallery-container">
 
@@ -147,7 +327,12 @@ function App() {
           ) : (
             <div className="gallery-grid">
               {displayedArt.map((art) => (
-                <ArtCard key={art.id} art={art} />
+                <ArtCard 
+                  key={art.id} 
+                  art={art} 
+                  onAddToCart={() => addToCart(art)}
+                  onQuickView={() => setPopupArtwork(art)}
+                />
               ))}
             </div>
           )}
@@ -171,6 +356,12 @@ function App() {
       <ChatBot 
         isOpen={isChatOpen} 
         onToggle={() => setIsChatOpen(!isChatOpen)} 
+      />
+      
+      <Popup 
+        isOpen={!!popupArtwork}
+        artwork={popupArtwork}
+        onClose={() => setPopupArtwork(null)}
       />
     </div>
   );

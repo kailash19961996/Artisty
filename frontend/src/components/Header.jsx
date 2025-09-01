@@ -1,6 +1,7 @@
 import React from 'react';
+import './Header.css';
 
-const Header = () => {
+const Header = ({ onCartClick, cartCount = 0 }) => {
   return (
     <header className="header">
       <div className="header-container">
@@ -15,16 +16,12 @@ const Header = () => {
 
           {/* Right Side Actions */}
           <div className="header-actions">
-            {/* Globe Icon */}
-            <button className="header-globe-btn">
-              <svg className="header-globe-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 919-9" />
+            {/* Cart Icon with badge - no background */}
+            <button onClick={onCartClick} className="header-cart-btn">
+              <svg className="header-cart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l3-8H6.4M7 13L5.4 5M7 13l-2 9m12-9l2 9M9 21a1 1 0 100-2 1 1 0 000 2zm8 0a1 1 0 100-2 1 1 0 000 2z" />
               </svg>
-            </button>
-
-            {/* Menu Button */}
-            <button className="header-menu-btn">
-              Menu
+              <span id="cart-badge" className="header-cart-badge" hidden={cartCount === 0}>{cartCount}</span>
             </button>
           </div>
         </div>

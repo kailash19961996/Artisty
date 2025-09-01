@@ -2,15 +2,20 @@ import json
 import os
 from utils import create_assistant
 
-# Initialize the assistant globally for Lambda reuses
+# Initialize the assistant globally for Lambda reuse
 assistant = None
 
 ALLOWED_ORIGINS = [
     # Production Amplify app (no trailing slash; CORS requires exact match)
     "https://main.d22zce484yggk5.amplifyapp.com",
+    "https://main.d22zce484yggk5.amplifyapp.com/",
     # Common local dev origins
     "http://localhost:5173",
+    "http://localhost:5173/",
+    "https://localhost:5173/",
+    "http://localhost:5050",
     "http://localhost:3000",
+    "http://127.0.0.1:5173"
 ]
 
 ALLOWED_METHODS = "GET,POST,OPTIONS"
@@ -19,7 +24,7 @@ ALLOWED_HEADERS = "Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Securit
 def cors_headers(origin: str | None) -> dict:
     allowed_origin = origin if origin in ALLOWED_ORIGINS else ALLOWED_ORIGINS[0]
     return {
-        "Access-Control-Allow-Origin": allowed_origin,
+        "Access-Control-Allow-Origin": *,
         "Access-Control-Allow-Credentials": "false",
         "Access-Control-Allow-Methods": ALLOWED_METHODS,
         "Access-Control-Allow-Headers": ALLOWED_HEADERS,
@@ -31,7 +36,7 @@ def cors_headers(origin: str | None) -> dict:
 def respond(status: int, body: dict, origin: str | None) -> dict:
     return {
         "statusCode": status,
-        "headers": cors_headers(origin),
+        "headers": cors_headers(origin),  # Always use the same CORS headers
         "body": json.dumps(body),
         "isBase64Encoded": False,
     }

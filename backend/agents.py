@@ -8,15 +8,17 @@ from __future__ import annotations
 
 import os
 import json
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Literal
 from dataclasses import dataclass
 
 from langchain_openai import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.schema import BaseMessage
-from langchain.tools import Tool
+from langchain.tools import Tool, StructuredTool
 from langchain.agents import AgentExecutor, create_openai_tools_agent
+from pydantic import BaseModel, Field
+import re
 
 
 @dataclass
@@ -25,6 +27,7 @@ class ArtworkSuggestion:
     names: List[str]  # List of artwork names to search for
     intent: str  # "art_suggestion", "general_info", "both"
     response: str  # Assistant's response text
+    web_actions: List[Dict[str, str]]  # Web actions for frontend
 
 
 class ArtistryAssistant:
@@ -36,12 +39,26 @@ class ArtistryAssistant:
         self.llm = ChatOpenAI(model=model_name, temperature=0.3)
         self.memory = ConversationBufferMemory(
             memory_key="chat_history",
-            return_messages=True
+            return_messages=True,
+            max_token_limit=2000  # Keep more conversation history
         )
         
         # Extract artwork names from inventory for reference
         self.artwork_names = self._extract_artwork_names()
         
+        # Schemas for structured tools
+        class QuickViewInput(BaseModel):
+            artwork_name: str = Field(..., description="Exact artwork name to open in quick view")
+
+        class AddToCartInput(BaseModel):
+            artwork_name: str = Field(..., description="Exact artwork name to add to cart")
+
+        class NavigateInput(BaseModel):
+            destination: Literal["cart", "home"] = Field(..., description="Where to navigate: 'cart' or 'home'")
+
+        class EmptyInput(BaseModel):
+            pass
+
         # Create tools
         self.tools = [
             Tool(
@@ -58,7 +75,31 @@ class ArtistryAssistant:
                 name="get_artwork_details",
                 description="Get details about a specific artwork by name",
                 func=self._get_artwork_details_tool
-            )
+            ),
+            StructuredTool.from_function(
+                name="quick_view",
+                description="Open a quick-view popup for a specific artwork when the user asks to zoom or view.",
+                func=self._quick_view_artwork_tool,
+                args_schema=QuickViewInput,
+            ),
+            StructuredTool.from_function(
+                name="add_to_cart",
+                description="Add a specific artwork to the user's shopping cart.",
+                func=self._add_to_cart_tool,
+                args_schema=AddToCartInput,
+            ),
+            StructuredTool.from_function(
+                name="navigate",
+                description="Navigate the UI to either the cart or the home (gallery) page.",
+                func=self._navigate_tool,
+                args_schema=NavigateInput,
+            ),
+            StructuredTool.from_function(
+                name="proceed_to_checkout",
+                description="Start the checkout process for items in the cart.",
+                func=self._proceed_to_checkout_tool,
+                args_schema=EmptyInput,
+            ),
         ]
         
         # Create the agent
@@ -68,7 +109,9 @@ class ArtistryAssistant:
             tools=self.tools,
             memory=self.memory,
             verbose=True,
-            max_iterations=3
+            max_iterations=3,
+            return_intermediate_steps=True,
+            handle_parsing_errors=True,
         )
     
     def _extract_artwork_names(self) -> List[str]:
@@ -107,6 +150,14 @@ IMPORTANT RULES:
 - If there are only 2 perfect matches, show just those 2
 - Always be helpful and engaging
 - Use the tools available to search inventory and provide accurate information
+
+UI ACTIONS AND TOOLS (MANDATORY):
+- You have tools: quick_view(artwork_name), add_to_cart(artwork_name), navigate(destination in [cart, home]), proceed_to_checkout().
+- If the user asks to zoom/enlarge/show popup → call quick_view.
+- If the user asks to bag/add/buy → call add_to_cart with the correct artwork name.
+- If the user asks to go to cart/home → call navigate with the destination.
+- If the user asks to pay/checkout → call proceed_to_checkout.
+- NEVER claim an action is completed unless you have called the appropriate tool.
 
 COUNTRY MAPPINGS (be exact):
 - UK/United Kingdom/Britain/English = England, UK (from inventory)
@@ -189,7 +240,93 @@ Return the matching inventory lines exactly as they appear."""
                 return f"Artwork details: {line.strip()}"
         return f"Artwork '{artwork_name}' not found in inventory."
     
+    def _quick_view_artwork_tool(self, artwork_name: str) -> str:
+        """Tool to show quick view popup of an artwork"""
+        return f"Showing quick view for {artwork_name}."
+    
+    def _add_to_cart_tool(self, artwork_name: str) -> str:
+        """Tool to add artwork to cart"""
+        return f"Added {artwork_name} to the cart."
+    
+    def _navigate_tool(self, destination: str) -> str:
+        """Tool to navigate to a destination ('cart' or 'home')"""
+        if destination not in {"cart", "home"}:
+            destination = "home"
+        return f"Navigating to {destination}."
+    
+    def _proceed_to_checkout_tool(self) -> str:
+        """Tool to start checkout process"""
+        return "Proceeding to checkout."
+    
     def process_message(self, user_message: str) -> ArtworkSuggestion:
+        """Process user message and return structured response"""
+        return self._process_message_sync(user_message)
+    
+    def process_message_stream(self, user_message: str):
+        """Process user message with streaming response"""
+        try:
+            # Get response from agent with streaming
+            result = self.agent_executor.invoke({"input": user_message})
+            response_text = result.get("output", "I apologize, but I encountered an error processing your request.")
+            
+            # Determine intent and extract artwork names
+            intent = self._classify_intent(user_message, response_text)
+            artwork_names = []
+            
+            if intent in ["art_suggestion", "both"]:
+                artwork_names = self._extract_suggested_artworks(response_text)
+            
+            # Build web actions from intermediate tool steps
+            steps = result.get("intermediate_steps", [])
+            web_actions = self._actions_from_steps(steps)
+            
+            # Add default search action ONLY when it's a pure suggestion
+            has_imperative = any(a.get("type") in ["add_to_cart", "quick_view", "navigate", "checkout"] for a in web_actions)
+            if not has_imperative and artwork_names and intent in ["art_suggestion", "both"]:
+                search_string = " ".join(artwork_names).lower()
+                if not any(action.get("type") == "search" for action in web_actions):
+                    web_actions.append({"type": "search", "value": search_string})
+                    web_actions.append({"type": "scroll", "value": "art-collection"})
+            
+            # Send actions immediately if available (before streaming text)
+            actions_sent = False
+            if web_actions:
+                yield {
+                    "chunk": "",
+                    "is_complete": False,
+                    "web_actions": web_actions,
+                    "intent": intent,
+                    "suggested_artworks": artwork_names,
+                    "full_response": None,
+                    "actions_only": True  # Flag to indicate this is an actions-only chunk
+                }
+                actions_sent = True
+            
+            # Stream the response word by word
+            words = response_text.split()
+            for i, word in enumerate(words):
+                chunk_data = {
+                    "chunk": word + " ",
+                    "is_complete": i == len(words) - 1,
+                    "web_actions": [] if actions_sent else web_actions,  # Don't send actions again
+                    "intent": intent if i == len(words) - 1 else None,
+                    "suggested_artworks": artwork_names if i == len(words) - 1 else [],
+                    "full_response": response_text if i == len(words) - 1 else None
+                }
+                yield chunk_data
+                
+        except Exception as e:
+            error_response = f"I'm having a bit of trouble right now. Let me try to help you directly! {str(e)}"
+            yield {
+                "chunk": error_response,
+                "is_complete": True,
+                "web_actions": [],
+                "intent": "general_info",
+                "suggested_artworks": [],
+                "full_response": error_response
+            }
+    
+    def _process_message_sync(self, user_message: str) -> ArtworkSuggestion:
         """Process user message and return structured response"""
         
         # Get response from agent
@@ -202,14 +339,32 @@ Return the matching inventory lines exactly as they appear."""
         # Determine intent and extract artwork names
         intent = self._classify_intent(user_message, response_text)
         artwork_names = []
+        web_actions = []
         
         if intent in ["art_suggestion", "both"]:
             artwork_names = self._extract_suggested_artworks(response_text)
         
+        # Build web actions from intermediate tool steps first (reliable)
+        steps = result.get("intermediate_steps", [])
+        web_actions = self._actions_from_steps(steps)
+        
+        # Fallback: also parse any explicit markers in the text
+        if not web_actions:
+            web_actions = self._parse_web_actions(response_text)
+        
+        # Add default search action ONLY when it's a pure suggestion (no imperative UI actions)
+        has_imperative = any(a.get("type") in ["add_to_cart", "quick_view", "navigate", "checkout"] for a in web_actions)
+        if not has_imperative and artwork_names and intent in ["art_suggestion", "both"]:
+            search_string = " ".join(artwork_names).lower()
+            if not any(action.get("type") == "search" for action in web_actions):
+                web_actions.append({"type": "search", "value": search_string})
+                web_actions.append({"type": "scroll", "value": "art-collection"})
+        
         return ArtworkSuggestion(
             names=artwork_names,
             intent=intent,
-            response=response_text
+            response=response_text,
+            web_actions=web_actions
         )
     
     def _classify_intent(self, user_message: str, response: str) -> str:
@@ -292,3 +447,70 @@ Extracted artwork names:"""
         except Exception as e:
             print(f"Extraction error: {e}")
             return []
+    
+    def _parse_web_actions(self, response_text: str) -> List[Dict[str, str]]:
+        """Parse web actions from agent response"""
+        actions = []
+        
+        print(f"[DEBUG] Parsing web actions from text: {response_text}")
+        
+        # Robust regex-based extraction for markers if present
+        markers = [
+            (r"QUICK_VIEW:([^\n.!?]+)", "quick_view"),
+            (r"ADD_TO_CART:([^\n.!?]+)", "add_to_cart"),
+        ]
+        for pattern, a_type in markers:
+            try:
+                m = re.search(pattern, response_text)
+                if m:
+                    name = m.group(1).strip()
+                    actions.append({"type": a_type, "value": name})
+                    print(f"[DEBUG] Added {a_type} action from text: {name}")
+            except Exception as e:
+                print(f"[DEBUG] Regex parse error for {a_type}: {e}")
+
+        if "GO_TO_CART" in response_text:
+            actions.append({"type": "navigate", "value": "cart"})
+        if "GO_TO_HOME" in response_text:
+            actions.append({"type": "navigate", "value": "home"})
+        if "PROCEED_TO_CHECKOUT" in response_text:
+            actions.append({"type": "checkout", "value": "start"})
+
+        print(f"[DEBUG] Final actions from text: {actions}")
+        return actions
+
+    def _actions_from_steps(self, steps: List[Any]) -> List[Dict[str, str]]:
+        """Build web actions from intermediate tool steps returned by the agent."""
+        actions: List[Dict[str, str]] = []
+        try:
+            for step in steps:
+                action = step[0] if isinstance(step, (list, tuple)) else step
+                tool_name = getattr(action, "tool", "")
+                tool_input = getattr(action, "tool_input", {})
+                if isinstance(tool_input, str):
+                    # Sometimes tool_input may be a plain string
+                    parsed_input = {"text": tool_input}
+                else:
+                    parsed_input = dict(tool_input)
+
+                if tool_name in ("quick_view", "quick_view_artwork"):
+                    name = parsed_input.get("artwork_name") or parsed_input.get("text") or ""
+                    if name:
+                        actions.append({"type": "quick_view", "value": name})
+                elif tool_name == "add_to_cart":
+                    name = parsed_input.get("artwork_name") or parsed_input.get("text") or ""
+                    if name:
+                        actions.append({"type": "add_to_cart", "value": name})
+                elif tool_name in ("navigate",):
+                    dest = parsed_input.get("destination") or parsed_input.get("text")
+                    if dest in {"cart", "home"}:
+                        actions.append({"type": "navigate", "value": dest})
+                elif tool_name in ("go_to_cart",):
+                    actions.append({"type": "navigate", "value": "cart"})
+                elif tool_name in ("go_to_home",):
+                    actions.append({"type": "navigate", "value": "home"})
+                elif tool_name in ("proceed_to_checkout", "checkout"):
+                    actions.append({"type": "checkout", "value": "start"})
+        except Exception as e:
+            print(f"[DEBUG] Error building actions from steps: {e}")
+        return actions

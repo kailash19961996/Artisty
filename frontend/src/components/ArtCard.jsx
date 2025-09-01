@@ -1,8 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import './ArtCard.css';
 
-const ArtCard = ({ art }) => {
+const ArtCard = ({ art, onAddToCart, onQuickView }) => {
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdded, setIsAdded] = useState(false);
+
+  
+  useEffect(() => {
+    const handleTriggerAddToCartFeedback = (event) => {
+      if (event.detail.artworkId === art.id) {
+        console.log('[DEBUG] Triggering add to cart feedback for:', art.name);
+        setIsAdded(true);
+        setTimeout(() => setIsAdded(false), 2000);
+      }
+    };
+    
+    window.addEventListener('triggerAddToCartFeedback', handleTriggerAddToCartFeedback);
+    
+    return () => {
+      window.removeEventListener('triggerAddToCartFeedback', handleTriggerAddToCartFeedback);
+    };
+  }, [art.id]);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-US', {
@@ -52,7 +71,10 @@ const ArtCard = ({ art }) => {
         
         {/* Overlay with quick view button */}
         <div className="art-card-overlay">
-          <button className="art-card-quick-view">
+          <button 
+            className="art-card-quick-view"
+            onClick={onQuickView}
+          >
             Quick View
           </button>
         </div>
@@ -76,11 +98,27 @@ const ArtCard = ({ art }) => {
           <span className="art-card-price">
             {formatPrice(art.price)}
           </span>
-          <button className="art-card-button">
-            Add to Cart
+          <button 
+            className={`art-card-button ${isAdded ? 'added' : ''}`}
+            onClick={() => {
+              if (onAddToCart) onAddToCart();
+              setIsAdded(true);
+              setTimeout(() => setIsAdded(false), 2000);
+            }}
+            aria-label={isAdded ? 'Added to Cart' : 'Add to Cart'}
+          >
+            {isAdded ? (
+              <>
+                <span>Added to Cart!</span>
+                <svg className="cart-check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </>
+            ) : 'Add to Cart'}
           </button>
         </div>
       </div>
+
     </div>
   );
 };

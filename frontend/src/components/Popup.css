@@ -1,0 +1,229 @@
+/* Full Screen Popup - HIGHEST PRIORITY */
+.popup-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.92) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 2147483647 !important; /* Maximum z-index value */
+  animation: popupFadeIn 0.25s ease;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.popup-content {
+  background: #ffffff !important;
+  border-radius: 1.5rem;
+  width: 95vw !important;
+  max-width: 1400px !important;
+  max-height: 95vh !important;
+  overflow: hidden;
+  position: relative !important;
+  animation: popupSlideIn 0.3s ease;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4) !important;
+  display: grid !important;
+  grid-template-columns: 2fr 1fr;
+  gap: 0;
+  z-index: 2147483647 !important;
+}
+
+.popup-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.popup-close:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
+.popup-image-container {
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  min-height: 60vh;
+}
+
+.popup-image {
+  width: 100%;
+  height: auto;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.popup-details {
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.popup-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem 0;
+  color: #1f2937;
+  line-height: 1.2;
+}
+
+.popup-origin {
+  color: #6b7280;
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0 0 1.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.popup-description {
+  color: #4b5563;
+  font-size: 1.125rem;
+  line-height: 1.7;
+  margin: 0 0 2rem 0;
+  flex-grow: 1;
+}
+
+.popup-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.popup-price {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #8b5cf6;
+  margin: 0;
+}
+
+.popup-add-to-cart {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem 1.75rem;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+}
+
+.popup-add-to-cart:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.4);
+}
+
+.popup-add-to-cart:active {
+  transform: translateY(0);
+}
+
+/* Animations */
+@keyframes popupFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popupSlideIn {
+  from { 
+    transform: scale(0.9) translateY(-30px);
+    opacity: 0;
+  }
+  to { 
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 1024px) {
+  .popup-content {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+    width: 98vw;
+    max-height: 98vh;
+  }
+  
+  .popup-image-container {
+    padding: 1.5rem;
+    min-height: 50vh;
+  }
+  
+  .popup-details {
+    padding: 1.5rem;
+  }
+  
+  .popup-title {
+    font-size: 1.875rem;
+  }
+  
+  .popup-price {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .popup-content {
+    border-radius: 1rem;
+    width: 100vw;
+    max-height: 100vh;
+  }
+  
+  .popup-close {
+    top: 1rem;
+    right: 1rem;
+    width: 36px;
+    height: 36px;
+    font-size: 1.5rem;
+  }
+  
+  .popup-image-container {
+    padding: 1rem;
+    min-height: 40vh;
+  }
+  
+  .popup-details {
+    padding: 1rem 1.25rem 1.5rem;
+  }
+  
+  .popup-title {
+    font-size: 1.5rem;
+  }
+  
+  .popup-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .popup-add-to-cart {
+    width: 100%;
+    padding: 1rem;
+  }
+}

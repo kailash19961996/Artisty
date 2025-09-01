@@ -23,28 +23,28 @@ const Banner = () => {
 
   return (
     <div className={`banner ${isAnimating ? 'banner-fade-out' : ''}`}>
-      <div className="banner-content">
-        <p className="banner-description">
-          An agentic AI-powered gallery guide — describe what you feel, and it finds the art.
-        </p>
-        
-        <div className="banner-tech">
-          <span className="tech-label">Tech Stack</span>
-          <div className="tech-stack">
-            <span className="tech-item">React</span>
-            <span className="tech-item">JS</span>
-            <span className="tech-item">Python</span>
-            <span className="tech-item">LangChain</span>
-            <span className="tech-item">OpenAI</span>
-            <span className="tech-item">AWS Amplify</span>
-            <span className="tech-item">AWS API Gateway</span>
-            <span className="tech-item">AWS Lambda</span>
-            <span className="tech-item">AWS S3</span>
-            <span className="tech-item">AWS CloudWatch</span>
+      <div className="banner-inner">
+        <div className="banner-content">
+          <p className="banner-description">
+            An agentic AI-powered gallery guide — describe what you feel, and it finds the art.
+          </p>
+          <div className="banner-tech">
+            <span className="tech-label">Tech Stack</span>
+            <div className="tech-stack">
+              <span className="tech-item">React</span>
+              <span className="tech-item">JS</span>
+              <span className="tech-item">Python</span>
+              <span className="tech-item">LangChain</span>
+              <span className="tech-item">OpenAI</span>
+              <span className="tech-item">AWS Amplify</span>
+              <span className="tech-item">AWS API Gateway</span>
+              <span className="tech-item">AWS Lambda</span>
+              <span className="tech-item">AWS S3</span>
+              <span className="tech-item">AWS CloudWatch</span>
+            </div>
+            <div className="banner-developer">Developed by KAI</div>
           </div>
-          <div className="banner-developer">Developed by KAI</div>
         </div>
-        
       </div>
     </div>
   );

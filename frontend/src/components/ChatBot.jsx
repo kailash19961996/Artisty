@@ -13,6 +13,8 @@ const ChatBot = ({ isOpen, onToggle }) => {
   ]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [currentStreamMessage, setCurrentStreamMessage] = useState('');
   const [backendOnline, setBackendOnline] = useState(null); // null | true | false
   const messagesEndRef = useRef(null);
   const [mobileSize, setMobileSize] = useState('peek'); // 'peek' | 'mid' | 'full'
@@ -69,55 +71,113 @@ const ChatBot = ({ isOpen, onToggle }) => {
     setIsTyping(true);
 
     try {
-      // Call the backend API via Vite proxy
-      const response = await apiFetch('/api/chat', {
+      // Use streaming endpoint
+      const response = await apiFetch('/api/chat/stream', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json',},
-        body: JSON.stringify({message: currentInput}),});
-
-      let data = null;
-      let text = '';
-      try {
-        data = await response.clone().json();
-      } catch (e) {
-        try {
-          text = await response.text();
-        } catch (_) {
-          text = '';
-        }
-      }
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: currentInput})
+      });
 
       if (!response.ok) {
-        const errorMessage = (data && (data.error || data.message)) || text || `HTTP ${response.status}`;
-        console.error('Backend returned error:', response.status, errorMessage);
+        const errorText = await response.text();
+        console.error('Backend returned error:', response.status, errorText);
         setBackendOnline(false);
-        throw new Error(errorMessage);
+        throw new Error(errorText || `HTTP ${response.status}`);
       }
 
       setBackendOnline(true);
-      data = data || {};
+      setIsStreaming(true);
+      setCurrentStreamMessage('');
+      setIsTyping(false); // Stop typing dots when streaming starts
       
-      // Handle AI Agent response
-      const botMessage = {
-        id: Date.now() + 1,
-        text: data.response || 'Sorry, I encountered an error. Please try again.',
+      // Create initial streaming message
+      const streamMessageId = Date.now() + 1;
+      const initialBotMessage = {
+        id: streamMessageId,
+        text: '',
         isBot: true,
         timestamp: new Date(),
+        isStreaming: true
       };
       
-      setMessages(prev => [...prev, botMessage]);
+      setMessages(prev => [...prev, initialBotMessage]);
       
-      // Handle web actions from the agent
-      if (data.web_actions && data.web_actions.length > 0) {
-        data.web_actions.forEach(action => {
-          if (action.type === 'search') {
-            // Trigger search in the main app
-            triggerSearch(action.value);
-          } else if (action.type === 'scroll') {
-            // Trigger scroll action
-            triggerScrollToSection(action.value);
+      // Process streaming response
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullResponse = '';
+      let finalActions = [];
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // Keep incomplete line in buffer
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              
+              // Handle actions immediately when they arrive (before or during streaming)
+              const actions = data.web_actions || data.actions || [];
+              if (actions && actions.length > 0) {
+                console.log('[DEBUG] Received actions:', actions);
+                actions.forEach(action => {
+                  console.log('[DEBUG] Processing action:', action);
+                  if (action.type === 'search') {
+                    triggerSearch(action.value);
+                  } else if (action.type === 'scroll') {
+                    triggerScrollToSection(action.value);
+                  } else if (action.type === 'quick_view') {
+                    console.log('[DEBUG] Triggering quick view for:', action.value);
+                    triggerQuickView(action.value);
+                  } else if (action.type === 'add_to_cart') {
+                    console.log('[DEBUG] Triggering add to cart for:', action.value);
+                    triggerAddToCart(action.value);
+                  } else if (action.type === 'navigate') {
+                    console.log('[DEBUG] Triggering navigation to:', action.value);
+                    triggerNavigation(action.value);
+                  } else if (action.type === 'checkout') {
+                    console.log('[DEBUG] Triggering checkout');
+                    triggerCheckout();
+                  }
+                });
+              }
+              
+              // Handle text content (if not an actions-only chunk)
+              if (data.chunk && !data.actions_only) {
+                fullResponse += data.chunk;
+                setCurrentStreamMessage(fullResponse);
+                
+                // Update the streaming message
+                setMessages(prev => prev.map(msg => 
+                  msg.id === streamMessageId 
+                    ? { ...msg, text: fullResponse }
+                    : msg
+                ));
+              }
+              
+              if (data.is_complete) {
+                // Finalize the message
+                setMessages(prev => prev.map(msg => 
+                  msg.id === streamMessageId 
+                    ? { ...msg, text: data.full_response || fullResponse, isStreaming: false }
+                    : msg
+                ));
+                
+                setIsStreaming(false);
+                setCurrentStreamMessage('');
+                break;
+              }
+            } catch (e) {
+              console.error('Error parsing streaming data:', e);
+            }
           }
-        });
+        }
       }
       
     } catch (error) {
@@ -133,6 +193,8 @@ const ChatBot = ({ isOpen, onToggle }) => {
       setMessages(prev => [...prev, botMessage]);
     } finally {
       setIsTyping(false);
+      setIsStreaming(false);
+      setCurrentStreamMessage('');
     }
   };
 
@@ -173,6 +235,32 @@ const ChatBot = ({ isOpen, onToggle }) => {
       const scrollAmount = sectionId === 'down' ? 500 : -500;
       window.scrollBy({ top: scrollAmount, behavior: 'smooth' });
     }
+  };
+  
+  // Function to trigger quick view for specific artwork
+  const triggerQuickView = (artworkName) => {
+    window.dispatchEvent(new CustomEvent('agentQuickView', { 
+      detail: { artworkName } 
+    }));
+  };
+  
+  // Function to trigger add to cart for specific artwork
+  const triggerAddToCart = (artworkName) => {
+    window.dispatchEvent(new CustomEvent('agentAddToCart', { 
+      detail: { artworkName } 
+    }));
+  };
+  
+  // Function to trigger navigation
+  const triggerNavigation = (destination) => {
+    window.dispatchEvent(new CustomEvent('agentNavigate', { 
+      detail: { destination } 
+    }));
+  };
+  
+  // Function to trigger checkout
+  const triggerCheckout = () => {
+    window.dispatchEvent(new CustomEvent('agentCheckout'));
   };
 
   const generateBotResponse = (userInput) => {
