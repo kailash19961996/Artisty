@@ -140,6 +140,20 @@ cd /var/task/langchain && zip -r9 /var/task/layer-langchain311.zip python
 "
 # Output zips in this folder:
 #   layer-pydantic311.zip, layer-openai311.zip, layer-langchain311.zip
+
+# 3) Pillow
+$PY="3.11"; $PLATFORM="linux/amd64"
+docker run --rm --platform $PLATFORM --entrypoint /bin/bash `
+  -v "${PWD}:/var/task" public.ecr.aws/lambda/python:$PY -lc '
+set -e
+rm -rf /var/task/pillow
+L=/var/task/pillow/python/lib/python3.11/site-packages
+mkdir -p "$L"
+python -m pip install --no-cache-dir -t "$L" Pillow==10.0.1
+'
+
+
+Compress-Archive -Path .\pillow\python -DestinationPath .\layer-pillow311.zip -Force
 ```
 
 macOS/Linux (bash/zsh) equivalent:
