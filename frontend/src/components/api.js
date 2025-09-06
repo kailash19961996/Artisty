@@ -20,9 +20,8 @@ export const API_BASE = (import.meta.env.VITE_API_BASE || 'http://127.0.0.1:5000
 // Ensure path starts with forward slash
 const normalize = (p) => (p.startsWith('/') ? p : '/' + p);
 
-// AWS Lambda doesn't need /api prefix in the actual path since API Gateway handles routing
-const stripApiForAws = (p) =>
-  API_BASE.includes('amazonaws.com') ? p.replace(/^\/api(\/|$)/, '/') : p;
+// Keep paths as-is. Our API Gateway is configured to expect the /api prefix.
+const stripApiForAws = (p) => p;
 
 /**
  * Make HTTP requests to the Artisty backend API

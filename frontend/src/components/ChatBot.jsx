@@ -2,14 +2,13 @@
  * ARTISTY CHATBOT - Intelligent AI Agent Interface
  * 
  * This component provides a sophisticated AI-powered chatbot that can:
- * - Stream responses word-by-word using Server-Sent Events (SSE)
  * - Execute real-time UI actions (search, navigation, cart management, popups)
  * - Maintain conversation context and memory
- * - Handle both JSON fallback and SSE streaming responses
+ * - Simulate streaming responses for better UX
  * - Adapt UI for mobile and desktop environments
  * 
  * Key Features:
- * - Real-time streaming responses with immediate action execution
+ * - Simulated streaming responses with immediate action execution
  * - Agentic capabilities: can control gallery navigation, cart operations, and UI elements
  * - Responsive design with mobile-specific sizing (peek/mid/full modes)
  * - Fallback responses when AI service is unavailable
@@ -17,7 +16,7 @@
  * 
  * Architecture:
  * - Uses custom events to communicate with parent App component
- * - Handles both SSE streaming and JSON response formats
+ * - Handles JSON responses from /api/chat endpoint
  * - Implements structured message rendering with markdown support
  * - Mobile-responsive with dynamic sizing based on screen size
  * 
@@ -33,7 +32,7 @@
  * @param {function} onToggle - Callback to toggle chatbot visibility
  * 
  * @author Artisty Team
- * @version 2.0.0 - Added SSE streaming and agentic capabilities
+ * @version 2.1.0 - Simplified to use direct JSON responses with simulated streaming
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -51,13 +50,17 @@ const ChatBot = ({ isOpen, onToggle }) => {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [currentStreamMessage, setCurrentStreamMessage] = useState('');
+  const [streamingMessageId, setStreamingMessageId] = useState(null);
   const [backendOnline, setBackendOnline] = useState(null); // null | true | false
   const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
   const [mobileSize, setMobileSize] = useState('peek'); // 'peek' | 'mid' | 'full'
   const [isMobile, setIsMobile] = useState(false);
 
   const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -108,8 +111,8 @@ const ChatBot = ({ isOpen, onToggle }) => {
     setIsTyping(true);
 
     try {
-      // Use streaming endpoint
-      const response = await apiFetch('/api/chat/stream', {
+      // Call backend API
+      const response = await apiFetch('/api/chat', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({message: currentInput})
@@ -122,29 +125,59 @@ const ChatBot = ({ isOpen, onToggle }) => {
         throw new Error(errorText || `HTTP ${response.status}`);
       }
 
-
-      // Check if response is JSON instead of SSE
-    const contentType = response.headers.get('content-type') || '';
-    console.log('Response content-type:', contentType);
-    if (contentType.includes('application/json')) {
-      console.log('Handling JSON response instead of SSE');
+      setBackendOnline(true);
       const data = await response.json();
       setIsTyping(false);
       
-      // Get the final response text
-      const finalText = data.response || data.full_response || '';
+      // Get response text and actions
+      const finalText = data.response || '';
+      const actions = data.web_actions || [];
       
-      // Add the complete message
+      // Create initial empty message for streaming simulation
+      const messageId = Date.now() + 1;
       const botMessage = {
-        id: Date.now() + 1,
-        text: finalText,
+        id: messageId,
+        text: '',
         isBot: true,
         timestamp: new Date(),
+        isStreaming: true
       };
       setMessages(prev => [...prev, botMessage]);
       
-      // Process any actions
-      const actions = data.web_actions || data.actions || [];
+      // Start streaming simulation
+      setIsStreaming(true);
+      setStreamingMessageId(messageId);
+      
+      // Simulate word-by-word streaming
+      const words = finalText.split(' ');
+      let currentText = '';
+      
+      for (let i = 0; i < words.length; i++) {
+        currentText += (i === 0 ? '' : ' ') + words[i];
+        
+        // Update the message with current text
+        setMessages(prev => prev.map(msg => 
+          msg.id === messageId 
+            ? { ...msg, text: currentText, isStreaming: true }
+            : msg
+        ));
+        
+        // Add delay between words
+        await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 30));
+        scrollToBottom();
+      }
+      
+      // Finish streaming
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, text: finalText, isStreaming: false }
+          : msg
+      ));
+      
+      setIsStreaming(false);
+      setStreamingMessageId(null);
+      
+      // Process actions after streaming completes
       console.log('Processing actions:', actions);
       actions.forEach(action => {
         console.log('Processing action:', action);
@@ -163,116 +196,11 @@ const ChatBot = ({ isOpen, onToggle }) => {
         }
       });
       
-      return; // Skip the SSE processing
-    }
-
-      // Handle SSE streaming response
-      console.log('Handling SSE streaming response');
-      setIsStreaming(true);
-      setCurrentStreamMessage('');
-      setIsTyping(false); // Stop typing dots when streaming starts
-      
-      // Create initial streaming message
-      const streamMessageId = Date.now() + 1;
-      const initialBotMessage = {
-        id: streamMessageId,
-        text: '',
-        isBot: true,
-        timestamp: new Date(),
-        isStreaming: true
-      };
-      
-      setMessages(prev => [...prev, initialBotMessage]);
-      
-      // Get all SSE data at once (AWS Lambda limitation) and simulate streaming
-      const responseText = await response.text();
-      console.log('[DEBUG] Raw SSE response:', responseText);
-      
-      // Parse all SSE chunks
-      const lines = responseText.split('\n');
-      const chunks = [];
-      
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          try {
-            const data = JSON.parse(line.slice(6));
-            chunks.push(data);
-          } catch (e) {
-            console.error('Error parsing SSE chunk:', e, line);
-          }
-        }
-      }
-      
-      console.log('[DEBUG] Parsed SSE chunks:', chunks.length);
-      
-      // Process actions from the first chunk (if any)
-      const firstChunk = chunks[0];
-      if (firstChunk && firstChunk.web_actions && firstChunk.web_actions.length > 0) {
-        console.log('[DEBUG] Processing actions from first chunk:', firstChunk.web_actions);
-        firstChunk.web_actions.forEach(action => {
-          console.log('[DEBUG] Processing action:', action);
-          if (action.type === 'search') {
-            triggerSearch(action.value);
-          } else if (action.type === 'scroll') {
-            triggerScrollToSection(action.value);
-          } else if (action.type === 'quick_view') {
-            console.log('[DEBUG] Triggering quick view for:', action.value);
-            triggerQuickView(action.value);
-          } else if (action.type === 'add_to_cart') {
-            console.log('[DEBUG] Triggering add to cart for:', action.value);
-            triggerAddToCart(action.value);
-          } else if (action.type === 'navigate') {
-            console.log('[DEBUG] Triggering navigation to:', action.value);
-            triggerNavigation(action.value);
-          } else if (action.type === 'checkout') {
-            console.log('[DEBUG] Triggering checkout');
-            triggerCheckout();
-          }
-        });
-      }
-      
-      // Simulate streaming by processing chunks with delays
-      let fullResponse = '';
-      
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
-        
-        // Skip actions-only chunks for text display
-        if (chunk.actions_only) continue;
-        
-        if (chunk.chunk) {
-          fullResponse += chunk.chunk;
-          
-          // Update the streaming message
-          setMessages(prev => prev.map(msg => 
-            msg.id === streamMessageId 
-              ? { ...msg, text: fullResponse }
-              : msg
-          ));
-          
-          // Add delay to simulate streaming (adjust as needed)
-          if (i < chunks.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 50));
-          }
-        }
-        
-        // Handle completion
-        if (chunk.is_complete) {
-          setMessages(prev => prev.map(msg => 
-            msg.id === streamMessageId 
-              ? { ...msg, text: chunk.full_response || fullResponse, isStreaming: false }
-              : msg
-          ));
-          
-          setIsStreaming(false);
-          setCurrentStreamMessage('');
-          break;
-        }
-      }
-      
     } catch (error) {
       console.error('Error calling backend API:', error);
-      // Fallback to local response if API fails
+      setBackendOnline(false);
+      
+      // Fallback to local response
       const fallbackResponse = generateBotResponse(currentInput);
       const botMessage = {
         id: Date.now() + 1,
@@ -284,7 +212,6 @@ const ChatBot = ({ isOpen, onToggle }) => {
     } finally {
       setIsTyping(false);
       setIsStreaming(false);
-      setCurrentStreamMessage('');
     }
   };
 
@@ -496,14 +423,21 @@ const ChatBot = ({ isOpen, onToggle }) => {
           </div>
 
           {/* Messages */}
-          <div className="chatbot-messages">
+          <div className="chatbot-messages" ref={chatContainerRef}>
             {messages.map((message) => (
               <div
                 key={message.id}
                 className={`message-wrapper ${message.isBot ? 'bot' : 'user'}`}
               >
                 <div className={`message ${message.isBot ? 'bot' : 'user'}`}>
-                  {message.isBot ? renderBotMessage(message.text) : message.text}
+                  {message.isBot ? (
+                    <span>
+                      {renderBotMessage(message.text)}
+                      {message.isStreaming && <span className="streaming-cursor">|</span>}
+                    </span>
+                  ) : (
+                    message.text
+                  )}
                 </div>
               </div>
             ))}

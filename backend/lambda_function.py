@@ -2,58 +2,43 @@
 ARTISTY BACKEND - AWS Lambda Function Handler
 
 This Lambda function serves as the backend API for the Artisty art gallery application.
-It provides AI-powered conversational assistance with real-time streaming responses
-and agentic UI control capabilities.
+It provides AI-powered conversational assistance with intelligent artwork recommendations
+and UI control capabilities.
 
 Key Features:
-- Server-Sent Events (SSE) streaming for real-time word-by-word responses
 - AI agent with tools for UI control (navigation, cart, popups, search)
 - CORS handling for cross-origin requests from the frontend
 - Health monitoring endpoint for backend status
 - Singleton pattern for AI assistant instance (Lambda container reuse)
+- Contextual artwork search with anti-hallucination validation
 
 Endpoints:
 - GET /api/health - Health check and system status
-- POST /api/chat/stream - Streaming AI chat with real-time actions
-- POST /api/chat - Non-streaming AI chat (fallback)
+- POST /api/chat - AI chat with structured responses and web actions
 - OPTIONS /* - CORS preflight handling
 
 Architecture:
 - Uses LangChain agents with structured tools for UI actions
-- Implements streaming response generation with SSE format
 - Maintains conversation memory across requests within container lifetime
-- Handles CORS for multiple allowed origins (dev, production)
+- Handles CORS for cross-origin requests
+- Provides structured JSON responses with web actions
 
 Security:
-- CORS whitelist for allowed origins
+- CORS configuration for allowed origins
 - Input validation and sanitization
 - Error handling with appropriate HTTP status codes
 - Environment variable validation for API keys
 
 @author Artisty Team
-@version 2.0.0 - Added SSE streaming and agentic capabilities
+@version 2.1.0 - Simplified architecture with direct JSON responses
 """
 
 import json
 import os
 from utils import create_assistant
 
-# Initialize the assistant globally for Lambda container reuse
-# This enables conversation memory persistence across requests
+# Global assistant instance for conversation memory persistence
 assistant = None
-
-ALLOWED_ORIGINS = [
-    # Production Amplify app (no trailing slash; CORS requires exact match)
-    "https://main.d22zce484yggk5.amplifyapp.com",
-    "https://main.d22zce484yggk5.amplifyapp.com/",
-    # Common local dev origins
-    "http://localhost:5173",
-    "http://localhost:5173/",
-    "https://localhost:5173/",
-    "http://localhost:5050",
-    "http://localhost:3000",
-    "http://127.0.0.1:5173"
-]
 
 ALLOWED_METHODS = "GET,POST,OPTIONS"
 ALLOWED_HEADERS = "Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token"
@@ -71,9 +56,9 @@ def cors_headers(origin: str | None) -> dict:
     Returns:
         dict: CORS headers for the response
     """
-    allowed_origin = origin if origin in ALLOWED_ORIGINS else ALLOWED_ORIGINS[0]
+    
     return {
-        "Access-Control-Allow-Origin": allowed_origin,
+        "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Credentials": "false",
         "Access-Control-Allow-Methods": ALLOWED_METHODS,
         "Access-Control-Allow-Headers": ALLOWED_HEADERS,
@@ -137,8 +122,7 @@ def lambda_handler(event, context):
     Handles all HTTP requests from the frontend, routing them to appropriate
     handlers based on the HTTP method and path. Supports:
     - Health checks (GET /api/health)
-    - AI chat streaming (POST /api/chat/stream) 
-    - AI chat non-streaming (POST /api/chat)
+    - AI chat (POST /api/chat)
     - CORS preflight (OPTIONS)
     
     Args:
@@ -148,8 +132,8 @@ def lambda_handler(event, context):
     Returns:
         dict: API Gateway response with status, headers, and body
     """
-    # Basic logging to CloudWatch for debugging
-    print("Event:", json.dumps(event)[:2000])
+    # Log request for monitoring and debugging
+    print("Request:", json.dumps(event)[:2000])
 
     headers = event.get("headers") or {}
     origin = headers.get("origin") or headers.get("Origin")
@@ -169,12 +153,12 @@ def lambda_handler(event, context):
         try:
             # Check if assistant can be initialized
             test_assistant = get_assistant()
-            inventory_loaded = test_assistant and len(test_assistant.artwork_names) > 0
+            inventory_loaded = test_assistant and len(test_assistant.inventory_text) > 0
             return respond(200, {
                 "status": "healthy",
                 "inventory_loaded": inventory_loaded,
                 "assistant_ready": test_assistant is not None,
-                "artwork_count": len(test_assistant.artwork_names) if test_assistant else 0
+                "inventory_length": len(test_assistant.inventory_text) if test_assistant else 0
             }, origin)
         except Exception as e:
             return respond(500, {
@@ -184,110 +168,42 @@ def lambda_handler(event, context):
                 "assistant_ready": False
             }, origin)
 
-    # Chat/message endpoint – accept several common paths
+    # Chat endpoint routing - support multiple path variations
     is_chat_path = (
         normalized_path in ("/artisty", "/api", "/message", "/chat")
         or normalized_path.endswith("/api/message")
         or normalized_path.endswith("/api/chat")
     )
     
-    # Streaming chat endpoint
-    is_stream_path = (
-        normalized_path.endswith("/api/chat/stream")
-        or normalized_path.endswith("/chat/stream")
-    )
-    
-    # Handle streaming chat endpoint
-    if method == "POST" and is_stream_path:
-        try:
-            raw = event.get("body") or "{}"
-            data = json.loads(raw) if isinstance(raw, str) else (raw or {})
-            user_message = (data.get("text") or data.get("message") or "").strip()
-
-            if not user_message:
-                return respond(400, {"success": False, "error": "Missing 'message' in body"}, origin)
-
-            print(f"\n[USER] {user_message}")
-            print(f"[DEBUG] Processing streaming request for path: {normalized_path}")
-            
-            # Get the assistant and process the message with streaming
-            ai_assistant = get_assistant()
-            
-            # Build SSE response
-            sse_chunks = []
-            
-            for chunk_data in ai_assistant.process_message_stream(user_message):
-                # Convert each chunk to SSE format
-                sse_line = f"data: {json.dumps(chunk_data)}\n\n"
-                sse_chunks.append(sse_line)
-                print(f"[DEBUG] Generated SSE chunk: {len(sse_line)} bytes")
-                
-                if chunk_data.get("is_complete"):
-                    print(f"[ASSISTANT] {chunk_data.get('full_response', '')}")
-                    print(f"[INTENT] {chunk_data.get('intent', '')}")
-                    print(f"[ARTWORKS] {chunk_data.get('suggested_artworks', [])}")
-                    print(f"[DEBUG] Web actions: {chunk_data.get('web_actions', [])}")
-                    break
-            
-            print(f"[DEBUG] Total SSE chunks: {len(sse_chunks)}, Total response size: {len(''.join(sse_chunks))} bytes")
-            
-            # Return SSE response with custom headers (don't use cors_headers which sets JSON content-type)
-            cors_base = cors_headers(origin)
-            sse_headers = {
-                **cors_base,
-                "Content-Type": "text/plain; charset=utf-8",  # Override JSON content-type for SSE
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive"
-            }
-            
-            return {
-                "statusCode": 200,
-                "headers": sse_headers,
-                "body": "".join(sse_chunks),  # All SSE chunks as one string
-                "isBase64Encoded": False,
-            }
-            
-        except json.JSONDecodeError:
-            return respond(400, {"success": False, "error": "Invalid JSON"}, origin)
-        except Exception as e:
-            print(f"Error processing streaming chat message: {str(e)}")
-            return respond(500, {"success": False, "error": str(e)}, origin)
-    
-    # Handle regular chat endpoint
+    # Handle chat requests
     if method == "POST" and is_chat_path:
         try:
             raw = event.get("body") or "{}"
             data = json.loads(raw) if isinstance(raw, str) else (raw or {})
-            # Support either 'text' or 'message' fields from the frontend
+            # Extract user message from request body
             user_message = (data.get("text") or data.get("message") or "").strip()
 
             if not user_message:
                 return respond(400, {"success": False, "error": "Missing 'message' in body"}, origin)
 
-            print(f"\n[USER] {user_message}")
+            print(f"User: {user_message}")
             
-            # Get the assistant and process the message
+            # Process message with AI assistant
             ai_assistant = get_assistant()
             result = ai_assistant.process_message(user_message)
             
-            print(f"[ASSISTANT] {result.response}")
-            print(f"[INTENT] {result.intent}")
-            print(f"[ARTWORKS] {result.names}")
+            print(f"Assistant: {result.response}")
+            print(f"Intent: {result.intent}")
+            print(f"Artworks: {result.names}")
+            print(f"Actions: {result.web_actions}")
             
-            # Use web actions from agent result (matches main.py functionality)
-            web_actions = result.web_actions if hasattr(result, 'web_actions') else []
-            print(f"[DEBUG] Web actions being sent to frontend: {web_actions}")
-            
-            # Include both keys for compatibility: 'web_actions' and short alias 'actions'
+            # Format response for frontend
             response_data = {
                 "response": result.response,
-                "web_actions": web_actions,
-                "actions": web_actions,  # Compatibility alias
+                "web_actions": result.web_actions,
                 "intent": result.intent,
                 "suggested_artworks": result.names,
-                "status": "success",
-                "agent_used": True,
-                "success": True,
+                "success": True
             }
             
             return respond(200, response_data, origin)
@@ -297,7 +213,7 @@ def lambda_handler(event, context):
         except Exception as e:
             print(f"Error processing chat message: {str(e)}")
             
-            # Fallback response
+            # Error response
             response_data = {
                 "response": f"I apologize, but I'm having technical difficulties. Please try again! (Error: {str(e)})",
                 "web_actions": [],

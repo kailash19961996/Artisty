@@ -32,14 +32,7 @@ import './CartPage.css';
 const CartPage = ({ cart, onRemoveFromCart, onGoBack }) => {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   
-  useEffect(() => {
-    if (showCheckoutModal) {
-      const timer = setTimeout(() => {
-        setShowCheckoutModal(false);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [showCheckoutModal]);
+  // Removed auto-close timeout - user closes manually
   
   useEffect(() => {
     const handleTriggerCheckout = () => {

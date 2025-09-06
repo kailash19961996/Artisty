@@ -32,6 +32,7 @@ const ArtCard = ({ art, onAddToCart, onQuickView }) => {
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdded, setIsAdded] = useState(false);
+  const [justAddedPulse, setJustAddedPulse] = useState(false);
 
   
   useEffect(() => {
@@ -39,7 +40,8 @@ const ArtCard = ({ art, onAddToCart, onQuickView }) => {
       if (event.detail.artworkId === art.id) {
         console.log('[DEBUG] Triggering add to cart feedback for:', art.name);
         setIsAdded(true);
-        setTimeout(() => setIsAdded(false), 2000);
+        setJustAddedPulse(true);
+        setTimeout(() => setJustAddedPulse(false), 1200);
       }
     };
     
@@ -126,20 +128,26 @@ const ArtCard = ({ art, onAddToCart, onQuickView }) => {
             {formatPrice(art.price)}
           </span>
           <button 
-            className={`art-card-button ${isAdded ? 'added' : ''}`}
+            className={`art-card-button ${isAdded ? 'added' : ''} ${justAddedPulse ? 'pulse-once' : ''}`}
             onClick={() => {
               if (onAddToCart) onAddToCart();
+              // Keep button green (persist) but replay tick animation
               setIsAdded(true);
-              setTimeout(() => setIsAdded(false), 2000);
+              setJustAddedPulse(false);
+              void document.body.offsetWidth;
+              setJustAddedPulse(true);
+              setTimeout(() => setJustAddedPulse(false), 1200);
             }}
             aria-label={isAdded ? 'Added to Cart' : 'Add to Cart'}
           >
             {isAdded ? (
               <>
-                <span>Added to Cart!</span>
-                <svg className="cart-check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+                <span>Added to Cart</span>
+                {justAddedPulse && (
+                  <svg className="cart-check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
               </>
             ) : 'Add to Cart'}
           </button>

@@ -21,7 +21,7 @@
  * - Coordinates between gallery and cart views seamlessly
  * 
  * @author Artisty Team
- * @version 2.0.0 - Added AI agent integration and streaming capabilities
+ * @version 2.1.0 - Added AI agent integration with direct JSON responses
  */
 
 import React, { useState, useEffect } from 'react';
@@ -254,6 +254,10 @@ function App() {
         }, 1200);
       }
       
+      // Persist "added" state for matching ArtCard buttons
+      window.dispatchEvent(new CustomEvent('triggerAddToCartFeedback', { 
+        detail: { artworkId: item.id }
+      }));
       return updated;
     });
   };

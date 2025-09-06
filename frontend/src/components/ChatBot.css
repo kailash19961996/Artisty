@@ -455,23 +455,19 @@
   background-color: #3b82f6;
 }
 
-/* Streaming cursor */
-.streaming-cursor {
-  display: flex;
-  align-items: center;
-  min-height: 20px;
-}
-
-.cursor-blink {
-  color: #8b5cf6;
-  font-weight: bold;
-  font-size: 1.2rem;
-  animation: blink 1s infinite;
-}
 
 @keyframes blink {
   0%, 50% { opacity: 1; }
   51%, 100% { opacity: 0; }
+}
+
+/* Streaming cursor */
+.streaming-cursor {
+  color: #8b5cf6;
+  font-weight: bold;
+  font-size: 1.1rem;
+  animation: blink 1s infinite;
+  margin-left: 2px;
 }
 
 .typing-dot:nth-child(2) {
