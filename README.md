@@ -1,23 +1,39 @@
 # Artisty
 
-**Agentic AI-powered art gallery with intelligent search, conversational assistance, and real-time actions**
+**Reimagining E-shopping experience with AI Agents powered by LangChain, deployed on AWS**
 
-Artisty transforms art discovery and purchase by combining intelligent conversational AI with a curated gallery experience. Users can naturally describe what they're looking for and receive personalized recommendations with real-time gallery navigation, cart management, and interactive actions—all through natural conversation.
+Artisty is a full‑stack, multi‑agent platform hosted on AWS that transforms how people explore and purchase art. It solves the frustration of clunky filters by enabling natural conversations that surface the right pieces instantly. With intelligent search and real‑time gallery actions, it delivers a vision of seamless, personalized art discovery.
 
-## Problem Statement
-
-Traditional art galleries and e-commerce platforms rely on basic filters and keyword search, making art discovery frustrating and limiting. Users struggle to find pieces that match their aesthetic preferences, budget, or specific requirements using conventional search methods.
-
-## Live Demo
-[Visit the Artisty Website](https://main.d22zce484yggk5.amplifyapp.com/)
-
-## Screenshots
+Try it yourself at [www.artisty.shop](https://artisty.shop/)
 
 ### Main Page
 ![Main Page](frontend/docs/images/main-page.png)
 
 ### Agent in Action
 ![Agent helping the user navigate artworks](frontend/docs/images/agent-navigate.png)
+
+[CLICK HERE FOR DEMO VIDEO](https://youtu.be/kAlLpC9a_uQ)
+
+[LEAVE YOUR FEEDBACK HERE](https://citrine-hamburger-7f5.notion.site/26f19d49e5c18076a3e4f4318f512ff5?pvs=105)
+
+### Technical Features
+
+| Tech | Description |
+|---------|-------------|
+| <span style="color:red; font-weight:bold;">OpenAI API</span> | For LLM support |
+| <span style="color:red; font-weight:bold;">Langchain</span> | For tool usage and agent orchestation |
+| <span style="color:red; font-weight:bold;">AWS Route 52</span> | Domain, routing and metrics |
+| <span style="color:red; font-weight:bold;">AWS Amplify - React + JS - Frontend</span> | Modern, type-safe UI, deployed on AWS Amplify |
+| <span style="color:red; font-weight:bold;">AWS Lambda - Python - Backend</span> | Python-based serverless, scalable architecture |
+| <span style="color:red; font-weight:bold;">Amazon S3</span> | Used to package Lambda layers |
+| <span style="color:red; font-weight:bold;">AWS API Gateway</span> | Manages secure connections between frontend and backend |
+| <span style="color:red; font-weight:bold;">AWS DynamoDB Database</span> | High-performance NoSQL storage for tickets and messages |
+| <span style="color:red; font-weight:bold;">CloudWatch</span> | For logging and monitoring |
+| <span style="color:red; font-weight:bold;">Docker</span> | Used to package librarie for AWS Lambda |
+| <span style="color:red; font-weight:bold;">Real-time Updates</span> | Optimistic UI with backend synchronization |
+| <span style="color:red; font-weight:bold;">CORS Support</span> | Secure API access |
+| <span style="color:red; font-weight:bold;">Github Action</span> | For CI/CD |
+
 
 
 ## Architecture Overview
@@ -29,6 +45,8 @@ The system uses a multi-agent approach with LangChain orchestration:
 3. **Response Generator**: Creates conversational responses with appropriate suggestions
 4. **Extraction Agent**: Identifies mentioned artwork names for gallery navigation
 5. **Memory Manager**: Maintains conversation context for better user experience
+
+### Agent Architecture
 
 All decision-making is handled by AI agents rather than manual rules, ensuring intelligent and flexible responses to user queries.
 
@@ -48,76 +66,10 @@ All decision-making is handled by AI agents rather than manual rules, ensuring i
 ## What It Cannot Do
 
 - Generate or create new artworks
-- Process payments or handle transactions
 - Provide art authentication or provenance verification
 - Access external art databases or inventories
 - Remember preferences across different browser sessions
 - Suggest artworks not in the current inventory
-
-## Technology Stack
-
-### Frontend
-- **React 18** with Vite for fast development and building
-- **Modern CSS** with custom components and responsive design
-- **Real-time Chat Interface** with structured message rendering
-- **Hosted on AWS Amplify** with automatic CI/CD from GitHub
-
-### Backend
-- **AWS Lambda (Python 3.11)** serverless functions with streaming SSE support
-- **API Gateway** REST API with CORS-enabled endpoints (`/api/health`, `/api/chat/stream`)
-- **Lambda Layers** (OpenAI, LangChain, Pydantic) packaged with Docker for Linux compatibility
-- **LangChain Agents** with structured tools for UI actions (quick_view, add_to_cart, navigate, checkout)
-- **OpenAI GPT-4o-mini** for natural language understanding and agentic decision-making
-- **Server-Sent Events (SSE)** for real-time streaming responses
-- **CloudWatch** for logging and monitoring
-
-### Deployment & Infra
-- **S3** for Lambda layer storage
-- **CloudWatch** for monitoring/logging
-- **AWS IAM** for security and access control
-- **Amplify** for frontend hosting & environment management
-
-### Architecture
-- **Agentic Tool System** with real-time UI control (navigation, cart, popups)
-- **Streaming Response Pipeline** with word-by-word delivery and immediate actions
-- **Intent Classification** for routing between information, suggestions, and UI actions
-- **LLM-Powered Extraction** for artwork name identification and action triggers
-- **Responsive Layout** with chatbot integration (30% chat, 70% content on desktop)
-
-## Quick Start
-
-### Backend Setup - Local
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-
-# Create .env file
-echo "OPENAI_API_KEY=your_openai_key_here" > .env
-echo "OPENAI_MODEL=gpt-4o-mini" >> .env
-
-python main.py
-```
-
-### Frontend Setup - Local
-```bash
-cd frontend
-npm install
-
-# Create .env for API endpoint
-echo "VITE_API_BASE=http://127.0.0.1:5000" > .env
-
-npm run dev
-```
-
-### Production Deployment
-```bash
-# Set environment variable in AWS Amplify Console:
-# VITE_API_BASE=https://your-api-gateway-url.execute-api.region.amazonaws.com/prod/api
-
-# Deploy automatically via GitHub integration
-```
 
 ## How Search Works in Frontend
 
