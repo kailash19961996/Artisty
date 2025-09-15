@@ -2,7 +2,7 @@
 
 **Reimagining E-shopping experience with AI Agents powered by LangChain, deployed on AWS**
 
-Artisty is a full‑stack, multi‑agent platform hosted on AWS that transforms how people explore and purchase art. It solves the frustration of clunky filters by enabling natural conversations that surface the right pieces instantly. With intelligent search and real‑time gallery actions, it delivers a vision of seamless, personalized art discovery.
+Artisty is a full‑stack, AI-Agent platform hosted on AWS that transforms how people explore and purchase art. It solves the frustration of clunky filters by enabling natural conversations that surface the right pieces instantly. With intelligent search and real‑time gallery actions, it delivers a vision of seamless, personalized art discovery.
 
 Try it yourself at [www.artisty.shop](https://artisty.shop/)
 
@@ -37,13 +37,11 @@ Try it yourself at [www.artisty.shop](https://artisty.shop/)
 
 ## Architecture Overview
 
-The system uses a multi-agent approach with LangChain orchestration:
-
-1. **Intent Router**: Classifies user messages as information requests or art suggestions
-2. **Inventory Search Agent**: Intelligently searches the art collection using LLM understanding
-3. **Response Generator**: Creates conversational responses with appropriate suggestions
-4. **Extraction Agent**: Identifies mentioned artwork names for gallery navigation
-5. **Memory Manager**: Maintains conversation context for better user experience
+1. **Planner Agent (LangChain Tools Agent)**: Decides when to answer directly vs. call a tool
+2. **Tools**: `search_inventory`, `quick_view`, `add_to_cart`, `navigate`, `checkout`
+3. **Conversation Memory**: Short-term memory scoped to warm Lambda container lifetime
+4. **Inventory Grounding**: Validates artwork names against inventory to avoid hallucinations
+5. **Frontend Event Bus**: Receives `web_actions` and performs UI operations (search, scroll, popup, cart, navigation)
 
 ### Agent Architecture
 
