@@ -27,7 +27,6 @@ Try it yourself at [www.artisty.shop](https://artisty.shop/)
 | <span style="color:red; font-weight:bold;">AWS Lambda - Python - Backend</span> | Python-based serverless, scalable architecture |
 | <span style="color:red; font-weight:bold;">Amazon S3</span> | Used to package Lambda layers |
 | <span style="color:red; font-weight:bold;">AWS API Gateway</span> | Manages secure connections between frontend and backend |
-| <span style="color:red; font-weight:bold;">AWS DynamoDB Database</span> | High-performance NoSQL storage for tickets and messages |
 | <span style="color:red; font-weight:bold;">CloudWatch</span> | For logging and monitoring |
 | <span style="color:red; font-weight:bold;">Docker</span> | Used to package Lambda layers |
 | <span style="color:red; font-weight:bold;">CORS Support</span> | Secure API access |
