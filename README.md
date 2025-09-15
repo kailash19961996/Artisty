@@ -2,7 +2,7 @@
 
 **Reimagining E-shopping experience with AI Agents powered by LangChain, deployed on AWS**
 
-Artisty is a full‑stack, AI-Agent platform hosted on AWS that transforms how people explore and purchase art. It solves the frustration of clunky filters by enabling natural conversations that surface the right pieces instantly. With intelligent search and real‑time gallery actions, it delivers a vision of seamless, personalized art discovery.
+Artisty is a full-stack AI-Agent platform hosted on AWS that reimagines how people explore and purchase art. Instead of clunky filters or endless scrolling, Artisty deploys intelligent agents that act like a personal curator. These agents understand natural conversation, interpret intent, and take real actions in real time — from searching inventory and navigating the gallery to opening quick-views, managing your cart, and guiding checkout.
 
 Try it yourself at [www.artisty.shop](https://artisty.shop/)
 
