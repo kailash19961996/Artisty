@@ -30,7 +30,6 @@ Try it yourself at [www.artisty.shop](https://artisty.shop/)
 | <span style="color:red; font-weight:bold;">AWS DynamoDB Database</span> | High-performance NoSQL storage for tickets and messages |
 | <span style="color:red; font-weight:bold;">CloudWatch</span> | For logging and monitoring |
 | <span style="color:red; font-weight:bold;">Docker</span> | Used to package Lambda layers |
-| <span style="color:red; font-weight:bold;">Real-time Updates</span> | Optimistic UI with backend synchronization |
 | <span style="color:red; font-weight:bold;">CORS Support</span> | Secure API access |
 | <span style="color:red; font-weight:bold;">Github Action</span> | For CI/CD |
 
