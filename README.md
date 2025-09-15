@@ -47,6 +47,8 @@ The system uses a multi-agent approach with LangChain orchestration:
 5. **Memory Manager**: Maintains conversation context for better user experience
 
 ### Agent Architecture
+<img width="3840" height="2619" alt="Untitled diagram _ Mermaid Chart-2025-09-15-165509" src="https://github.com/user-attachments/assets/99b15978-31bd-4d18-ac56-9d5f9662764d" />
+
 <img width="3840" height="2628" alt="Untitled diagram _ Mermaid Chart-2025-09-15-165451" src="https://github.com/user-attachments/assets/4018f647-cd4c-443f-a482-2fc17e9ddd4c" />
 
 ![Mermaid Chart - Create complex, visual diagrams with text  A smarter way of creating diagrams -2025-09-15-164803](https://github.com/user-attachments/assets/37b1f32f-fdf3-48eb-89f0-eefccc99515a)
