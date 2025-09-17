@@ -12,7 +12,7 @@ Try it yourself at [www.artisty.shop](https://artisty.shop/)
 ### Agent in Action
 ![Agent helping the user navigate artworks](frontend/docs/images/agent-navigate.png)
 
-[CLICK HERE FOR DEMO VIDEO](https://youtu.be/kAlLpC9a_uQ)
+[CLICK HERE FOR DEMO VIDEO](https://youtu.be/0wxVcU0LoxM)
 
 [LEAVE YOUR FEEDBACK HERE](https://citrine-hamburger-7f5.notion.site/26f19d49e5c18076a3e4f4318f512ff5?pvs=105)
 
