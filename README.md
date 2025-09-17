@@ -14,7 +14,7 @@ Try it yourself at [www.artisty.shop](https://artisty.shop/)
 
 [CLICK HERE FOR DEMO VIDEO](https://youtu.be/0wxVcU0LoxM)
 
-[LEAVE YOUR FEEDBACK HERE](https://citrine-hamburger-7f5.notion.site/26f19d49e5c18076a3e4f4318f512ff5?pvs=105)
+[LEAVE YOUR FEEDBACK HERE](https://slately.notion.site/26f19d49e5c18076a3e4f4318f512ff5?pvs=105)
 
 ### Technical Features
 
